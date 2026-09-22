@@ -1,0 +1,203 @@
+@import "tailwindcss";
+
+/* ---------------------------------------------------------------------------
+   Design tokens.
+
+   Every color below was validated with the data-viz palette validator against
+   the two surfaces this app actually renders on (#ffffff light, #101319 dark).
+   The three language hues — orange / aqua / violet — clear the all-pairs CVD
+   gate and the normal-vision floor in BOTH modes, which is why the language
+   spectrum caps at three named segments plus "Other". Blue is deliberately
+   held back from that set so it can stay the single accent + magnitude hue.
+--------------------------------------------------------------------------- */
+
+@theme inline {
+  --color-page: var(--page);
+  --color-surface: var(--surface);
+  --color-inset: var(--inset);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
+  --color-lang-1: var(--lang-1);
+  --color-lang-2: var(--lang-2);
+  --color-lang-3: var(--lang-3);
+  --color-lang-other: var(--lang-other);
+  --color-critical: var(--critical);
+  --color-warning: var(--warning);
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+
+  --radius-card: 14px;
+}
+
+:root {
+  color-scheme: light;
+  --page: #f6f7f9;
+  --surface: #ffffff;
+  --inset: #eef0f3;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --ink-3: #898781;
+  --line: rgba(11, 11, 11, 0.1);
+  --line-strong: rgba(11, 11, 11, 0.2);
+  --accent: #2a78d6;
+  --accent-soft: rgba(42, 120, 214, 0.12);
+  --accent-ink: #ffffff;
+  --lang-1: #eb6834;
+  --lang-2: #1baf7a;
+  --lang-3: #4a3aa7;
+  --lang-other: #898781;
+  --critical: #d03b3b;
+  --warning: #fab219;
+  --glow: radial-gradient(1100px 520px at 50% -12%, rgba(42, 120, 214, 0.1), transparent 70%);
+  --grid-line: rgba(11, 11, 11, 0.035);
+}
+
+/* Dark is declared twice on purpose: once for the OS setting, once for the
+   in-app toggle. The :not() guard lets an explicit light choice beat OS dark. */
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #08090c;
+    --surface: #101319;
+    --inset: #161a22;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --ink-3: #898781;
+    --line: rgba(255, 255, 255, 0.1);
+    --line-strong: rgba(255, 255, 255, 0.2);
+    --accent: #3987e5;
+    --accent-soft: rgba(57, 135, 229, 0.16);
+    --accent-ink: #06121f;
+    --lang-1: #d95926;
+    --lang-2: #199e70;
+    --lang-3: #9085e9;
+    --lang-other: #898781;
+    --critical: #e66767;
+    --warning: #fab219;
+    --glow: radial-gradient(1100px 520px at 50% -12%, rgba(57, 135, 229, 0.18), transparent 70%);
+    --grid-line: rgba(255, 255, 255, 0.032);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #08090c;
+  --surface: #101319;
+  --inset: #161a22;
+  --ink: #ffffff;
+  --ink-2: #c3c2b7;
+  --ink-3: #898781;
+  --line: rgba(255, 255, 255, 0.1);
+  --line-strong: rgba(255, 255, 255, 0.2);
+  --accent: #3987e5;
+  --accent-soft: rgba(57, 135, 229, 0.16);
+  --accent-ink: #06121f;
+  --lang-1: #d95926;
+  --lang-2: #199e70;
+  --lang-3: #9085e9;
+  --lang-other: #898781;
+  --critical: #e66767;
+  --warning: #fab219;
+  --glow: radial-gradient(1100px 520px at 50% -12%, rgba(57, 135, 229, 0.18), transparent 70%);
+  --grid-line: rgba(255, 255, 255, 0.032);
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background-color: var(--page);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* The deck plate: a hairline grid under a soft accent glow. Purely atmospheric,
+   sits behind everything, and never intercepts pointer events. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    var(--glow),
+    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
+  background-size: 100% 100%, 64px 64px, 64px 64px;
+}
+
+/* One focus treatment everywhere, so keyboard users get a consistent signal. */
+:where(a, button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+@keyframes deck-rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes deck-shimmer {
+  from {
+    background-position: -180% 0;
+  }
+  to {
+    background-position: 180% 0;
+  }
+}
+
+@utility deck-rise {
+  animation: deck-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Skeletons read as "a value is coming", not as content. */
+@utility deck-skeleton {
+  background-image: linear-gradient(
+    90deg,
+    var(--inset) 0%,
+    color-mix(in oklab, var(--inset) 72%, var(--ink-3)) 50%,
+    var(--inset) 100%
+  );
+  background-size: 180% 100%;
+  animation: deck-shimmer 1.4s ease-in-out infinite;
+}
+
+@utility card {
+  background-color: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-card);
+}

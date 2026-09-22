@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Repo Deck — GitHub Repository Explorer</title>
+    <meta name="description" content="Search any GitHub user and explore their public repositories: sort by stars, name, or recency, filter by language, and read the shape of their work at a glance." />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2308090c'/%3E%3Cpath d='M16 7l7 4.5v9L16 25l-7-4.5v-9z' fill='none' stroke='%233987e5' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E" />
+    <script>
+      // Applied before first paint so a light-mode viewer never sees a dark flash.
+      try {
+        var stored = localStorage.getItem('repo-deck:theme');
+        document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
+      } catch (_) {
+        document.documentElement.dataset.theme = 'dark';
+      }
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
