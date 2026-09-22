@@ -6,6 +6,7 @@ export interface DeckState {
   username: string;
   search: string;
   language: string | null;
+  topic: string | null;
   sort: SortKey;
   sourcesOnly: boolean;
 }
@@ -17,6 +18,7 @@ export const EMPTY_STATE: DeckState = {
   username: '',
   search: '',
   language: null,
+  topic: null,
   sort: DEFAULT_SORT,
   sourcesOnly: false,
 };
@@ -28,6 +30,7 @@ function parse(search: string): DeckState {
     username: params.get('u') ?? '',
     search: params.get('q') ?? '',
     language: params.get('lang'),
+    topic: params.get('topic'),
     sort: SORT_KEYS.includes(sort as SortKey) ? (sort as SortKey) : DEFAULT_SORT,
     sourcesOnly: params.get('src') === '1',
   };
@@ -39,6 +42,7 @@ function serialize(state: DeckState): string {
   if (state.username) params.set('u', state.username);
   if (state.search) params.set('q', state.search);
   if (state.language) params.set('lang', state.language);
+  if (state.topic) params.set('topic', state.topic);
   if (state.sort !== DEFAULT_SORT) params.set('sort', state.sort);
   if (state.sourcesOnly) params.set('src', '1');
   const query = params.toString();

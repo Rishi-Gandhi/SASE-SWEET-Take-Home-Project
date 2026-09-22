@@ -3,6 +3,7 @@ import type { GitHubRepo, SortKey } from '../types';
 export interface RepoQuery {
   search: string;
   language: string | null;
+  topic: string | null;
   sort: SortKey;
   sourcesOnly: boolean;
 }
@@ -53,6 +54,7 @@ export function selectRepos(repos: GitHubRepo[], query: RepoQuery): GitHubRepo[]
     .filter((repo) => {
       if (query.sourcesOnly && repo.fork) return false;
       if (query.language && repo.language !== query.language) return false;
+      if (query.topic && !(repo.topics ?? []).includes(query.topic)) return false;
       return matchesSearch(repo, needle);
     })
     .sort(comparator(query.sort));
@@ -68,6 +70,27 @@ export function languageOptions(repos: GitHubRepo[]): Array<{ language: string; 
   return [...counts.entries()]
     .map(([language, count]) => ({ language, count }))
     .sort((a, b) => b.count - a.count || a.language.localeCompare(b.language, 'en'));
+}
+
+/**
+ * Topics across the set, most-used first. GitHub already returns these on the
+ * repo payload, so surfacing them as filters costs no extra requests — they
+ * were being fetched and thrown away.
+ */
+export function topicOptions(
+  repos: GitHubRepo[],
+  limit = 24,
+): Array<{ topic: string; count: number }> {
+  const counts = new Map<string, number>();
+  for (const repo of repos) {
+    for (const topic of repo.topics ?? []) {
+      counts.set(topic, (counts.get(topic) ?? 0) + 1);
+    }
+  }
+  return [...counts.entries()]
+    .map(([topic, count]) => ({ topic, count }))
+    .sort((a, b) => b.count - a.count || a.topic.localeCompare(b.topic, 'en'))
+    .slice(0, limit);
 }
 
 export function totalStars(repos: GitHubRepo[]): number {

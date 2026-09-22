@@ -3,6 +3,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 import { makeRepo, makeUser } from './fixtures';
+import { resetRateLimit } from '../lib/rateLimit';
 
 const REPOS = [
   makeRepo({ name: 'kernel', stargazers_count: 900, language: 'C', description: 'An operating system kernel' }),
@@ -19,11 +20,16 @@ function json(body: unknown, init: ResponseInit = {}) {
 }
 
 /** Routes the two endpoints the app calls; `repos` defaults to the fixture set. */
-function stubGitHub(options: { repos?: unknown; user?: unknown; status?: number } = {}) {
+function stubGitHub(
+  options: { repos?: unknown; user?: unknown; status?: number; quota?: Record<string, string> } = {},
+) {
+  const init = options.quota ? { headers: options.quota } : {};
   const fetchMock = vi.fn().mockImplementation((url: string) => {
-    if (options.status && options.status !== 200) return Promise.resolve(json({}, { status: options.status }));
+    if (options.status && options.status !== 200) {
+      return Promise.resolve(json({}, { status: options.status, ...init }));
+    }
     return Promise.resolve(
-      url.includes('/repos') ? json(options.repos ?? REPOS) : json(options.user ?? makeUser()),
+      url.includes('/repos') ? json(options.repos ?? REPOS, init) : json(options.user ?? makeUser(), init),
     );
   });
   vi.stubGlobal('fetch', fetchMock);
@@ -33,7 +39,7 @@ function stubGitHub(options: { repos?: unknown; user?: unknown; status?: number 
 async function search(name: string) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText(/github username/i), name);
-  await user.click(screen.getByRole('button', { name: /explore/i }));
+  await user.click(screen.getByRole('button', { name: /^draw$/i }));
   return user;
 }
 
@@ -41,7 +47,10 @@ async function search(name: string) {
 // cached for the life of the module, so reusing one handle would serve the
 // previous test's fixture instead of the stub this test set up.
 beforeEach(() => window.history.replaceState(null, '', '/'));
-afterEach(() => vi.unstubAllGlobals());
+afterEach(() => {
+  vi.unstubAllGlobals();
+  resetRateLimit();
+});
 
 describe('Repo Deck', () => {
   it('starts on the idle state with something to try', () => {
@@ -163,5 +172,87 @@ describe('Repo Deck', () => {
 
     expect(await screen.findByText(/no public repositories/i)).toBeInTheDocument();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('opens the command palette on the keyboard and runs a command from it', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('palette-user');
+    await screen.findByRole('link', { name: 'kernel' });
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    const palette = await screen.findByRole('dialog', { name: /command palette/i });
+
+    await user.keyboard('name');
+    const option = within(palette).getByRole('option', { name: /sort by name/i });
+    await user.click(option);
+
+    // The palette closes and the list is now alphabetical.
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    const links = screen.getAllByRole('link', { name: /kernel|toolbox|dotfiles/ });
+    expect(links.map((l) => l.textContent)).toEqual(['dotfiles', 'kernel', 'toolbox']);
+  });
+
+  it('closes the palette on Escape without changing anything', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('escape-user');
+    await screen.findByRole('link', { name: 'kernel' });
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    expect(await screen.findByRole('dialog')).toBeInTheDocument();
+
+    await user.keyboard('{Escape}');
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
+  });
+
+  it('filters by a topic chip and puts it in the URL', async () => {
+    stubGitHub({
+      repos: [
+        makeRepo({ name: 'kernel', stargazers_count: 900, language: 'C', topics: ['os', 'kernel'] }),
+        makeRepo({ name: 'toolbox', stargazers_count: 120, language: 'Rust', topics: ['cli'] }),
+      ],
+    });
+    render(<App />);
+    const user = await search('topic-user');
+
+    const chip = await screen.findByRole('button', { name: 'cli' });
+    await user.click(chip);
+
+    await waitFor(() => expect(screen.getByText('1 of 2 repositories')).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'toolbox' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'kernel' })).not.toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).toContain('topic=cli'));
+  });
+
+  it('shows the remaining API budget once GitHub reports it', async () => {
+    stubGitHub({
+      quota: {
+        'x-ratelimit-limit': '60',
+        'x-ratelimit-remaining': '48',
+        'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 1800),
+      },
+    });
+    render(<App />);
+    await search('quota-user');
+
+    const meter = await screen.findByRole('meter');
+    expect(meter).toHaveAttribute('aria-valuenow', '48');
+    expect(meter).toHaveAttribute('aria-valuemax', '60');
+    expect(screen.getByText('48/60')).toBeInTheDocument();
+  });
+
+  it('gives the lead repository the lead cell', async () => {
+    stubGitHub();
+    render(<App />);
+    await search('bento-user');
+
+    const lead = await screen.findByRole('link', { name: 'kernel' });
+    // The principal card is the one card that spans two columns.
+    expect(lead.closest('li')).toHaveClass('sm:col-span-2');
+    expect(screen.getByRole('link', { name: 'toolbox' }).closest('li')).not.toHaveClass(
+      'sm:col-span-2',
+    );
   });
 });

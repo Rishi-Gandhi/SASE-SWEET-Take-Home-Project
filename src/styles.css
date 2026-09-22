@@ -1,14 +1,29 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Design tokens.
+   BLUEPRINT
+   ---------------------------------------------------------------------------
+   The app is drawn as a technical document: a measurement grid, registration
+   marks, dimension lines, figure references. Dark mode is a classic cyanotype
+   blueprint (pale lines on drafting blue); light mode is a bluleline print
+   (navy ink on paper). Both are the same drawing.
 
-   Every color below was validated with the data-viz palette validator against
-   the two surfaces this app actually renders on (#ffffff light, #101319 dark).
-   The three language hues — orange / aqua / violet — clear the all-pairs CVD
-   gate and the normal-vision floor in BOTH modes, which is why the language
-   spectrum caps at three named segments plus "Other". Blue is deliberately
-   held back from that set so it can stay the single accent + magnitude hue.
+   Three colour roles, and the separation between them is the whole system:
+
+   1. DATA — the three language hues. Validated all-pairs for colour-vision
+      deficiency against BOTH surfaces below (#0b2a47 dark, #faf8f2 light):
+      worst CVD ΔE 9.4 dark / 9.2 light (≥8 required), worst normal-vision
+      ΔE 24.6 dark / 27.6 light (≥15 required). Three is the cap — a fourth
+      named hue cannot clear the gate, so the tail folds into neutral grey.
+
+   2. CHROME — grid lines, rules, annotations. Deliberately BELOW the chroma
+      floor (#6d9ab9 measures 0.067, floor is 0.1) so it reads as structure
+      and can never be mistaken for a data series.
+
+   3. ACCENT — interaction, focus, and magnitude. Achromatic on purpose
+      (#eaf4ff dark / #12283d light, chroma 0.018 / 0.048), because the
+      obvious blueprint accent — cyan — sits only ΔE 12.4 from the violet
+      language hue and would have been confusable with it.
 --------------------------------------------------------------------------- */
 
 @theme inline {
@@ -31,82 +46,100 @@
   --color-warning: var(--warning);
 
   --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  --font-display: "Chakra Petch", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  --radius-card: 14px;
+  --radius-card: 2px;
 }
 
+/* Light = blueline print on drafting paper. */
 :root {
   color-scheme: light;
-  --page: #f6f7f9;
-  --surface: #ffffff;
-  --inset: #eef0f3;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --ink-3: #898781;
-  --line: rgba(11, 11, 11, 0.1);
-  --line-strong: rgba(11, 11, 11, 0.2);
-  --accent: #2a78d6;
-  --accent-soft: rgba(42, 120, 214, 0.12);
-  --accent-ink: #ffffff;
+  --page: #efece3;
+  --surface: #faf8f2;
+  --inset: #e9e5da;
+  --ink: #12283d;
+  --ink-2: #40566c;
+  --ink-3: #7c8b99;
+  --line: #c9cdd0;
+  --line-strong: #98a3ad;
+  --accent: #12283d;
+  --accent-soft: rgba(18, 40, 61, 0.08);
+  --accent-ink: #faf8f2;
   --lang-1: #eb6834;
   --lang-2: #1baf7a;
   --lang-3: #4a3aa7;
-  --lang-other: #898781;
-  --critical: #d03b3b;
-  --warning: #fab219;
-  --glow: radial-gradient(1100px 520px at 50% -12%, rgba(42, 120, 214, 0.1), transparent 70%);
-  --grid-line: rgba(11, 11, 11, 0.035);
+  --lang-other: #8b8f93;
+  --critical: #b3261e;
+  --warning: #9a6700;
+  --grid-minor: rgba(18, 40, 61, 0.055);
+  --grid-major: rgba(18, 40, 61, 0.1);
+  /* Sequential ramp for magnitude: paper -> ink, monotonic lightness. */
+  --ramp-0: #e4e0d5;
+  --ramp-1: #b9c6d2;
+  --ramp-2: #7e9ab3;
+  --ramp-3: #436b8f;
+  --ramp-4: #12283d;
 }
 
-/* Dark is declared twice on purpose: once for the OS setting, once for the
-   in-app toggle. The :not() guard lets an explicit light choice beat OS dark. */
+/* Dark is declared twice: once for the OS setting, once for the in-app
+   toggle. The :not() guard lets an explicit light choice beat OS dark. */
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --page: #08090c;
-    --surface: #101319;
-    --inset: #161a22;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --ink-3: #898781;
-    --line: rgba(255, 255, 255, 0.1);
-    --line-strong: rgba(255, 255, 255, 0.2);
-    --accent: #3987e5;
-    --accent-soft: rgba(57, 135, 229, 0.16);
-    --accent-ink: #06121f;
+    --page: #061a2e;
+    --surface: #0b2a47;
+    --inset: #0f3454;
+    --ink: #eaf4ff;
+    --ink-2: #a9cde8;
+    --ink-3: #6d9ab9;
+    --line: #1b4a74;
+    --line-strong: #2d6595;
+    --accent: #eaf4ff;
+    --accent-soft: rgba(234, 244, 255, 0.12);
+    --accent-ink: #061a2e;
     --lang-1: #d95926;
     --lang-2: #199e70;
     --lang-3: #9085e9;
-    --lang-other: #898781;
-    --critical: #e66767;
-    --warning: #fab219;
-    --glow: radial-gradient(1100px 520px at 50% -12%, rgba(57, 135, 229, 0.18), transparent 70%);
-    --grid-line: rgba(255, 255, 255, 0.032);
+    --lang-other: #7d8a95;
+    --critical: #ff8a80;
+    --warning: #f0b429;
+    --grid-minor: rgba(120, 180, 225, 0.075);
+    --grid-major: rgba(120, 180, 225, 0.14);
+    --ramp-0: #0e3152;
+    --ramp-1: #1a5580;
+    --ramp-2: #3a82b5;
+    --ramp-3: #77b6dd;
+    --ramp-4: #dceeff;
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #08090c;
-  --surface: #101319;
-  --inset: #161a22;
-  --ink: #ffffff;
-  --ink-2: #c3c2b7;
-  --ink-3: #898781;
-  --line: rgba(255, 255, 255, 0.1);
-  --line-strong: rgba(255, 255, 255, 0.2);
-  --accent: #3987e5;
-  --accent-soft: rgba(57, 135, 229, 0.16);
-  --accent-ink: #06121f;
+  --page: #061a2e;
+  --surface: #0b2a47;
+  --inset: #0f3454;
+  --ink: #eaf4ff;
+  --ink-2: #a9cde8;
+  --ink-3: #6d9ab9;
+  --line: #1b4a74;
+  --line-strong: #2d6595;
+  --accent: #eaf4ff;
+  --accent-soft: rgba(234, 244, 255, 0.12);
+  --accent-ink: #061a2e;
   --lang-1: #d95926;
   --lang-2: #199e70;
   --lang-3: #9085e9;
-  --lang-other: #898781;
-  --critical: #e66767;
-  --warning: #fab219;
-  --glow: radial-gradient(1100px 520px at 50% -12%, rgba(57, 135, 229, 0.18), transparent 70%);
-  --grid-line: rgba(255, 255, 255, 0.032);
+  --lang-other: #7d8a95;
+  --critical: #ff8a80;
+  --warning: #f0b429;
+  --grid-minor: rgba(120, 180, 225, 0.075);
+  --grid-major: rgba(120, 180, 225, 0.14);
+  --ramp-0: #0e3152;
+  --ramp-1: #1a5580;
+  --ramp-2: #3a82b5;
+  --ramp-3: #77b6dd;
+  --ramp-4: #dceeff;
 }
 
 html {
@@ -122,8 +155,8 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-/* The deck plate: a hairline grid under a soft accent glow. Purely atmospheric,
-   sits behind everything, and never intercepts pointer events. */
+/* The drawing sheet: a 16px minor grid with an 80px major grid over it.
+   Purely structural, sits behind everything, never intercepts the pointer. */
 body::before {
   content: "";
   position: fixed;
@@ -131,17 +164,17 @@ body::before {
   z-index: -1;
   pointer-events: none;
   background-image:
-    var(--glow),
-    linear-gradient(to right, var(--grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-line) 1px, transparent 1px);
-  background-size: 100% 100%, 64px 64px, 64px 64px;
+    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
 }
 
-/* One focus treatment everywhere, so keyboard users get a consistent signal. */
 :where(a, button, input, select, [tabindex]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 6px;
+  border-radius: 2px;
 }
 
 ::selection {
@@ -161,43 +194,85 @@ body::before {
 }
 
 @keyframes deck-rise {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: none;
-  }
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: none; }
 }
 
 @keyframes deck-shimmer {
-  from {
-    background-position: -180% 0;
-  }
-  to {
-    background-position: 180% 0;
-  }
+  from { background-position: -180% 0; }
+  to { background-position: 180% 0; }
 }
 
 @utility deck-rise {
   animation: deck-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Skeletons read as "a value is coming", not as content. */
 @utility deck-skeleton {
   background-image: linear-gradient(
     90deg,
     var(--inset) 0%,
-    color-mix(in oklab, var(--inset) 72%, var(--ink-3)) 50%,
+    color-mix(in oklab, var(--inset) 70%, var(--ink-3)) 50%,
     var(--inset) 100%
   );
   background-size: 180% 100%;
   animation: deck-shimmer 1.4s ease-in-out infinite;
 }
 
-@utility card {
+/* A sheet: the base surface every panel is drawn on. */
+@utility sheet {
   background-color: var(--surface);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
 }
+
+/* Registration marks at the four corners, the way a drawing is trimmed.
+   Eight solid-colour gradients: one horizontal and one vertical arm per
+   corner, so no extra DOM is needed. */
+@utility bp-corners {
+  background-image:
+    linear-gradient(var(--ink-3), var(--ink-3)), linear-gradient(var(--ink-3), var(--ink-3)),
+    linear-gradient(var(--ink-3), var(--ink-3)), linear-gradient(var(--ink-3), var(--ink-3)),
+    linear-gradient(var(--ink-3), var(--ink-3)), linear-gradient(var(--ink-3), var(--ink-3)),
+    linear-gradient(var(--ink-3), var(--ink-3)), linear-gradient(var(--ink-3), var(--ink-3));
+  background-size: 9px 1px, 1px 9px, 9px 1px, 1px 9px, 9px 1px, 1px 9px, 9px 1px, 1px 9px;
+  background-position:
+    left 7px top 7px, left 7px top 7px,
+    right 7px top 7px, right 7px top 7px,
+    left 7px bottom 7px, left 7px bottom 7px,
+    right 7px bottom 7px, right 7px bottom 7px;
+  background-repeat: no-repeat;
+}
+
+/* Drafting annotation: condensed, uppercase, letterspaced. */
+@utility label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* A dimension line: a rule with a tick at each end. */
+@utility bp-dim {
+  position: relative;
+  height: 1px;
+  background: var(--line-strong);
+}
+
+@utility bp-tick {
+  position: relative;
+}
+
+.bp-tick::before,
+.bp-tick::after {
+  content: "";
+  position: absolute;
+  top: -3px;
+  width: 1px;
+  height: 7px;
+  background: var(--ink-3);
+}
+
+.bp-tick::before { left: 0; }
+.bp-tick::after { right: 0; }

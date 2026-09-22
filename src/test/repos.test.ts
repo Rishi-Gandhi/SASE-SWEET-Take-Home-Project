@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { languageOptions, selectRepos, totalStars } from '../lib/repos';
+import { languageOptions, selectRepos, topicOptions, totalStars } from '../lib/repos';
 import type { RepoQuery } from '../lib/repos';
 import { makeRepo } from './fixtures';
 
-const BASE: RepoQuery = { search: '', language: null, sort: 'stars', sourcesOnly: false };
+const BASE: RepoQuery = { search: '', language: null, topic: null, sort: 'stars', sourcesOnly: false };
 
 const repos = [
   makeRepo({ name: 'zebra', stargazers_count: 10, forks_count: 1, language: 'Go', pushed_at: '2024-06-01T00:00:00Z' }),
@@ -67,6 +67,17 @@ describe('selectRepos', () => {
     expect(names(selectRepos(repos, { ...BASE, sourcesOnly: true }))).not.toContain('forked-thing');
   });
 
+  it('filters by an exact topic', () => {
+    expect(names(selectRepos(repos, { ...BASE, topic: 'parser' }))).toEqual(['mid']);
+    expect(selectRepos(repos, { ...BASE, topic: 'nonexistent' })).toEqual([]);
+  });
+
+  it('treats a repo with no topics as matching no topic filter', () => {
+    const untagged = [makeRepo({ name: 'bare', topics: [] })];
+    expect(selectRepos(untagged, { ...BASE, topic: 'cli' })).toEqual([]);
+    expect(names(selectRepos(untagged, BASE))).toEqual(['bare']);
+  });
+
   it('combines filters', () => {
     const result = selectRepos(repos, { ...BASE, language: 'Go', search: 'parser' });
     expect(names(result)).toEqual(['mid']);
@@ -86,6 +97,27 @@ describe('languageOptions', () => {
       { language: 'Rust', count: 1 },
       { language: 'TypeScript', count: 1 },
     ]);
+  });
+});
+
+describe('topicOptions', () => {
+  it('counts topics across repos, most used first', () => {
+    const tagged = [
+      makeRepo({ name: 'a', topics: ['cli', 'rust'] }),
+      makeRepo({ name: 'b', topics: ['cli'] }),
+      makeRepo({ name: 'c', topics: [] }),
+    ];
+    expect(topicOptions(tagged)).toEqual([
+      { topic: 'cli', count: 2 },
+      { topic: 'rust', count: 1 },
+    ]);
+  });
+
+  it('caps the list so the dropdown stays usable', () => {
+    const many = Array.from({ length: 40 }, (_, i) =>
+      makeRepo({ name: `r${i}`, topics: [`topic-${i}`] }),
+    );
+    expect(topicOptions(many, 5)).toHaveLength(5);
   });
 });
 

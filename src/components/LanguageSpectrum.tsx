@@ -23,13 +23,10 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
   return (
     <section aria-labelledby="spectrum-heading" className="mt-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <h3
-          id="spectrum-heading"
-          className="text-[11px] font-semibold uppercase tracking-[0.14em] text-ink-3"
-        >
+        <h3 id="spectrum-heading" className="label">
           Language mix
         </h3>
-        <p className="text-[11px] text-ink-3">
+        <p className="font-mono text-[10px] text-ink-3">
           {exactNumber(spectrum.classified)} of {exactNumber(spectrum.total)} repos classified
         </p>
       </div>
@@ -44,7 +41,7 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
 
           const fill = (
             <span
-              className="block h-[10px] w-full rounded-[3px] transition-[height,opacity] duration-200 group-hover:h-[14px]"
+              className="block h-[10px] w-full rounded-[1px] transition-[height,opacity] duration-200 group-hover:h-[14px]"
               style={{
                 background: segment.color,
                 opacity: activeLanguage && !isActive && !segment.isOther ? 0.4 : 1,
@@ -73,7 +70,7 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
               aria-pressed={isActive}
               aria-label={`${label}. Filter by ${segment.label}`}
               onClick={() => onSelectLanguage(isActive ? null : segment.label)}
-              className="group flex h-full cursor-pointer items-center rounded-[4px]"
+              className="group flex h-full cursor-pointer items-center rounded-[2px]"
               style={{ flex: `${segment.share} 1 0`, minWidth: '6px' }}
             >
               {fill}
@@ -91,11 +88,11 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
             <>
               <span
                 aria-hidden="true"
-                className="size-2 shrink-0 rounded-full"
+                className="size-2 shrink-0 rounded-[1px]"
                 style={{ background: segment.color }}
               />
-              <span className="text-ink-2">{segment.label}</span>
-              <span className="font-mono text-[11px] text-ink-3 tabular-nums">
+              <span className="font-mono text-ink-2">{segment.label}</span>
+              <span className="font-mono text-[11px] tabular-nums text-ink-3">
                 {percent(segment.share)}
               </span>
             </>
@@ -110,7 +107,7 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => onSelectLanguage(isActive ? null : segment.label)}
-                  className={`flex cursor-pointer items-center gap-1.5 rounded-md px-1.5 py-0.5 -mx-1.5 transition-colors hover:bg-inset ${
+                  className={`-mx-1.5 flex cursor-pointer items-center gap-1.5 rounded-[2px] px-1.5 py-0.5 transition-colors hover:bg-inset ${
                     isActive ? 'bg-accent-soft' : ''
                   }`}
                 >

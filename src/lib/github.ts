@@ -1,4 +1,5 @@
 import type { GitHubRepo, GitHubUser, Profile } from '../types';
+import { recordRateLimit } from './rateLimit';
 
 const API_ROOT = 'https://api.github.com';
 const PER_PAGE = 100;
@@ -77,6 +78,9 @@ async function request<T>(path: string, signal: AbortSignal): Promise<T> {
     if (err instanceof DOMException && err.name === 'AbortError') throw err;
     throw new GitHubError('network', 'Could not reach GitHub. Check your connection and try again.');
   }
+
+  // Every response carries the quota headers, successes and failures alike.
+  recordRateLimit(res.headers);
 
   if (res.ok) return res.json() as Promise<T>;
 
