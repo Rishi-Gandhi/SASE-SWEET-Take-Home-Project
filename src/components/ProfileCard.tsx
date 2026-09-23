@@ -1,10 +1,11 @@
+import { useState } from 'react';
 import type { Profile } from '../types';
 import type { Spectrum } from '../lib/spectrum';
 import type { Activity } from '../lib/activity';
 import { absoluteDate, compactNumber, exactNumber } from '../lib/format';
 import { LanguageSpectrum } from './LanguageSpectrum';
 import { ActivityHeatmap } from './ActivityHeatmap';
-import { ArrowOutIcon } from './icons';
+import { ArrowOutIcon, PinIcon } from './icons';
 
 interface Props {
   profile: Profile;
@@ -12,7 +13,11 @@ interface Props {
   activity: Activity;
   totalStars: number;
   activeLanguage: string | null;
+  isPinned: boolean;
+  comparing: boolean;
   onSelectLanguage: (language: string | null) => void;
+  onTogglePin: () => void;
+  onCompare: (login: string) => void;
 }
 
 /**
@@ -38,13 +43,83 @@ export function ProfileCard({
   activity,
   totalStars,
   activeLanguage,
+  isPinned,
+  comparing,
   onSelectLanguage,
+  onTogglePin,
+  onCompare,
 }: Props) {
   const { user, repos, truncated } = profile;
+  const [vsDraft, setVsDraft] = useState('');
+  const [vsOpen, setVsOpen] = useState(false);
 
   return (
     <section className="sheet bp-corners deck-rise p-5 sm:p-6" aria-labelledby="profile-heading">
-      <p className="label mb-4">Sheet 01 — Account overview</p>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <p className="label">Sheet 01 — Account overview</p>
+
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            aria-pressed={isPinned}
+            onClick={onTogglePin}
+            className={`flex cursor-pointer items-center gap-1.5 rounded-[2px] border px-2 py-1 font-mono text-[11px] transition-colors ${
+              isPinned
+                ? 'border-accent bg-accent-soft text-ink'
+                : 'border-line text-ink-2 hover:border-line-strong'
+            }`}
+          >
+            <PinIcon className="size-3" />
+            {isPinned ? 'Pinned' : 'Pin'}
+          </button>
+
+          {!comparing && (
+            <button
+              type="button"
+              onClick={() => setVsOpen((open) => !open)}
+              aria-expanded={vsOpen}
+              className="cursor-pointer rounded-[2px] border border-line px-2 py-1 font-mono text-[11px] text-ink-2 transition-colors hover:border-line-strong"
+            >
+              Compare with…
+            </button>
+          )}
+        </div>
+      </div>
+
+      {vsOpen && !comparing && (
+        <form
+          className="mb-4 flex flex-wrap items-center gap-2"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const handle = vsDraft.trim();
+            if (!handle) return;
+            onCompare(handle);
+            setVsDraft('');
+            setVsOpen(false);
+          }}
+        >
+          <label htmlFor="compare-with" className="label">
+            Second account
+          </label>
+          <input
+            id="compare-with"
+            value={vsDraft}
+            onChange={(event) => setVsDraft(event.target.value)}
+            placeholder="username"
+            autoComplete="off"
+            autoCapitalize="none"
+            spellCheck={false}
+            className="h-8 min-w-0 flex-1 rounded-[2px] border border-line bg-inset px-2 font-mono text-[12px] text-ink placeholder:text-ink-3 focus:border-accent focus:outline-none sm:max-w-56"
+          />
+          <button
+            type="submit"
+            disabled={vsDraft.trim().length === 0}
+            className="h-8 cursor-pointer rounded-[2px] bg-accent px-3 font-display text-[12px] font-semibold uppercase tracking-wider text-accent-ink transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Compare
+          </button>
+        </form>
+      )}
 
       <div className="flex flex-col gap-5 sm:flex-row sm:items-start">
         <img

@@ -21,7 +21,7 @@ Other scripts:
 ```bash
 npm run build        # production bundle into dist/
 npm run preview      # serve the built bundle
-npm test             # 64 unit + integration tests
+npm test             # 78 unit + integration tests
 npm run typecheck    # tsc, no emit
 ```
 
@@ -39,12 +39,17 @@ No API key, no `.env`, no backend. It talks straight to the public GitHub REST A
 - Sort by stars, recency, name, or forks — and watch the cards physically travel to their new
   positions rather than teleport
 - Filter by free text (name, description, **and** topics), by language, by topic, or by fork status
+- **Compare two accounts** side by side, with their repositories merged into one sortable grid
 - A **language mix** bar and a **last-push activity strip** summarising the whole account
-- A **command palette** (`⌘K`) for jumping to a user, opening a repo, or running any command
+- A **command palette** (`⌘K`) for jumping to a user, opening a repo, pinning, or comparing
+- **Pin** accounts you return to; recents are remembered automatically
 - A **live API budget meter**, read from the response headers
+- A **condensed header** that keeps the account and its language mix on screen as you scroll
 - Loading, empty, no-match, and four distinct error states
 - Light/dark themes, keyboard shortcuts, and a layout verified from 320px up
 - Every view is a shareable URL
+
+![Two accounts compared, with a dumbbell per metric and the languages they share](docs/compare.png)
 
 | Command palette | Light theme ("blueline print") |
 |---|---|
@@ -170,11 +175,61 @@ Levels are quartiles of the non-zero months, the way GitHub's own contribution g
 scale against the maximum looked correct and was useless: one bulk month of 400 dependency bumps
 dragged every other month down to the same bottom step and the chart stopped saying anything.
 
+### Comparing two accounts
+
+Add a second handle and both accounts' repositories merge into one grid, each card tagged with its
+owner. Every pure function — filtering, sorting, topic and language options — works on the merged
+set unchanged, because GitHub ids are unique site-wide so the merge needs no deduplication.
+
+The comparison itself is **one dumbbell per metric, each scaled to its own larger value**. That is
+the important decision: repos and stars differ by three orders of magnitude, and putting them on one
+shared axis would invent a relationship that is not in the data. Per-row scales are small multiples —
+every row is its own chart — and the exact figures are printed in each row header rather than beside
+the marks, so two close values can never overlap.
+
+The two accounts are distinguished by **two shades of one hue**, not two hues. Lightness is the only
+channel every form of colour-vision deficiency preserves, so a light/dark pair is the most robust
+two-series encoding available — and both are labelled regardless.
+
+Comparing costs twice the API budget, which is why the profile cache matters: flipping between two
+accounts you have already loaded is free.
+
+**One invariant worth stating**, because it is subtle and I got it wrong first: language colours are
+keyed to the *primary* account's mix and nothing else. I initially keyed them to the merged pool,
+which meant starting a comparison **repainted** languages already on screen — C went from orange to
+grey because a 500-repo Python account outvoted it. That is the recolour-on-filter anti-pattern, and
+there is now a regression test for it. Repos in a language outside the primary account's top three
+get the neutral, which while comparing is itself informative: coloured means "a language this account
+actually works in".
+
 ### The bento lead cell
 
 The lead card in the current ordering gets a double-width cell, a larger figure, and a spec block —
 licence, open issues, watchers, homepage. All of that is already in the payload and was previously
 discarded. Thirty identical boxes have no reading order; one lead does.
+
+### The condensed header
+
+Once the profile sheet scrolls out of view, a slim bar takes its place carrying the avatar, handle,
+visible repo count, and a miniature of the language mix — so the account's shape stays on screen
+while you read its repositories.
+
+It uses an `IntersectionObserver` rather than a scroll listener: no per-frame work, no reading layout
+on every scroll event. Two details: the observer only counts scrolling *past* the sheet (an element
+below the fold is also "not intersecting" and must not trigger the bar), and the observed node is
+held in **state, not a ref** — it only mounts once a profile loads, and an effect keyed on a ref
+object would have run once against `null` and never again. That bug shipped in my first attempt and
+the bar simply never appeared.
+
+### Staggered entrance
+
+Cards arrive on a 22ms cascade, capped at fourteen so a 500-repo account does not spend twelve
+seconds drawing itself in. The delay is a CSS custom property set per card; under
+`prefers-reduced-motion` both the duration *and the delay* are zeroed — zeroing only the duration
+would leave late cards parked at `opacity: 0` for their full delay.
+
+The entrance animation lives on the card and the FLIP transform lives on the grid item, so the two
+transforms are on different elements and can never fight.
 
 ### Four error states, not one
 
@@ -224,13 +279,16 @@ src/
     repos.ts       filter + sort + topic/language options (pure)
     spectrum.ts    language distribution (pure)
     activity.ts    last-push histogram + quartile scaling (pure)
+    compare.ts     two-account metrics, shared languages/topics (pure)
     rateLimit.ts   quota store, written by the client, read via useSyncExternalStore
     format.ts      numbers, relative dates (Intl)
   hooks/
     useProfile.ts      fetch state machine, abort, cache
     useDeckState.ts    URL <-> state
     useFlipReorder.ts  FLIP reorder animation
+    useScrolledPast.ts IntersectionObserver for the condensed header
     useRecentUsers.ts  recent handles (localStorage)
+    usePinnedUsers.ts  pinned handles (localStorage)
     useRateLimit.ts    subscribes to the quota store
     useTheme.ts        theme persistence
   components/     presentational; no fetching
@@ -248,13 +306,15 @@ business importing a hook — `useSyncExternalStore` is the supported way to rea
 
 ## Tests
 
-64 tests, run with `npm test`:
+78 tests, run with `npm test`:
 
 - **`repos.test.ts`** — every sort key, tie-breaking, search across name/description/topics, language
   and topic filters, combinations, and that sorting doesn't mutate its input
 - **`spectrum.test.ts`** — ranking, the three-colour cap, the "Other" fold, deterministic tie-breaks
 - **`activity.test.ts`** — window boundaries, bucketing, and specifically that a 200-repo outlier
   month doesn't flatten the quiet months to one level
+- **`compare.test.ts`** — per-metric scaling, no divide-by-zero on empty accounts, shared
+  language/topic detection, and that merged ids stay unique
 - **`rateLimit.test.ts`** — header parsing, malformed values, subscriber notification, and that an
   out-of-order response can't walk the remaining count back up
 - **`github.test.ts`** — username validation, and that each failure maps to the right error kind:
@@ -262,7 +322,9 @@ business importing a hook — `useSyncExternalStore` is the supported way to rea
   passing through untouched
 - **`App.test.tsx`** — the real flows against a stubbed API: search → render, filter → count, topic
   chips, the command palette (open, run, Escape), the bento lead cell, the budget meter, URL
-  round-tripping, and each error state
+  round-tripping, each error state, comparing two accounts, a failed second account degrading
+  without taking the first down, pinning surviving a remount, the stagger delays, and that starting
+  a comparison does not repaint existing language colours
 
 Two jsdom notes, in `src/test/setup.ts`: `scrollIntoView` is stubbed because it's universal in real
 browsers and absent from jsdom. `matchMedia` and the Web Animations API are stubbed too, but the FLIP
@@ -275,9 +337,10 @@ hook *also* guards them — those two genuinely were missing from Safari within 
 - **Total stars is a lower bound** for accounts past the ceiling, since it sums only what was loaded.
 - **Star-bar scale is per-view.** Filtering to a handful of small repos rescales the bars. That's how
   axes normally behave, but it means the bar isn't comparable across two different filters.
+- **Comparing doubles the request cost**, which against a 60/hour budget is the single most
+  expensive thing you can do in this app. The cache softens it; a token would solve it.
 - **With more time:** a tiny serverless proxy holding a token (5,000 requests/hour instead of 60),
-  the repo list virtualised, a side-by-side compare of two accounts, and a language breakdown
-  weighted by *bytes* via `/repos/:owner/:repo/languages` rather than by primary-language repo count —
+  the repo list virtualised, and a language breakdown weighted by *bytes* via `/repos/:owner/:repo/languages` rather than by primary-language repo count —
   more accurate, but one extra request per repo, which the anonymous rate limit rules out entirely.
 
 ---

@@ -18,11 +18,18 @@ interface Props {
   onClose: () => void;
   repos: GitHubRepo[];
   recent: string[];
+  pinned: string[];
+  currentLogin: string | null;
+  isPinned: (login: string) => boolean;
+  comparing: boolean;
   sort: SortKey;
   sourcesOnly: boolean;
   theme: 'light' | 'dark';
   hasFilters: boolean;
   onPickUser: (login: string) => void;
+  onCompare: (login: string) => void;
+  onStopCompare: () => void;
+  onTogglePin: (login: string) => void;
   onSort: (sort: SortKey) => void;
   onToggleForks: () => void;
   onToggleTheme: () => void;
@@ -39,7 +46,7 @@ interface Props {
  * screen reader which option is current.
  */
 export function CommandPalette(props: Props) {
-  const { open, onClose, repos, recent } = props;
+  const { open, onClose, repos, recent, pinned } = props;
   const [query, setQuery] = useState('');
   const [active, setActive] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -59,9 +66,30 @@ export function CommandPalette(props: Props) {
         hint: 'GitHub user',
         run: () => props.onPickUser(handle),
       });
+      if (!props.comparing && handle.toLowerCase() !== props.currentLogin?.toLowerCase()) {
+        out.push({
+          id: `compare-${handle}`,
+          group: 'Search',
+          label: `Compare with ${handle}`,
+          hint: 'Side by side',
+          run: () => props.onCompare(handle),
+        });
+      }
+    }
+
+    for (const login of pinned) {
+      if (needle && !login.toLowerCase().includes(needle)) continue;
+      out.push({
+        id: `pinned-${login}`,
+        group: 'Pinned',
+        label: login,
+        hint: 'Pinned',
+        run: () => props.onPickUser(login),
+      });
     }
 
     for (const login of recent) {
+      if (pinned.some((p) => p.toLowerCase() === login.toLowerCase())) continue;
       if (needle && !login.toLowerCase().includes(needle)) continue;
       if (handle && login.toLowerCase() === handle.toLowerCase()) continue;
       out.push({
@@ -87,6 +115,30 @@ export function CommandPalette(props: Props) {
     }
 
     const actions: Command[] = [
+      ...(props.currentLogin
+        ? [
+            {
+              id: 'toggle-pin',
+              group: 'Commands',
+              label: props.isPinned(props.currentLogin)
+                ? `Unpin ${props.currentLogin}`
+                : `Pin ${props.currentLogin}`,
+              hint: 'Pins',
+              run: () => props.onTogglePin(props.currentLogin as string),
+            },
+          ]
+        : []),
+      ...(props.comparing
+        ? [
+            {
+              id: 'stop-compare',
+              group: 'Commands',
+              label: 'Stop comparing',
+              hint: 'Compare',
+              run: props.onStopCompare,
+            },
+          ]
+        : []),
       ...SORT_OPTIONS.filter((option) => option.value !== props.sort).map((option) => ({
         id: `sort-${option.value}`,
         group: 'Commands',
@@ -125,7 +177,7 @@ export function CommandPalette(props: Props) {
     }
 
     return out;
-  }, [query, repos, recent, props]);
+  }, [query, repos, recent, pinned, props]);
 
   // Reset to a clean slate each time it opens, and remember where focus came
   // from so closing puts it back.

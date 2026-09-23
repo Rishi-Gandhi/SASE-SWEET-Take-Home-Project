@@ -123,3 +123,21 @@ export function DeckMark({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+export function PinIcon({ className = '' }: IconProps) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className={`${base} ${className}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.6"
+      strokeLinejoin="round"
+      strokeLinecap="round"
+    >
+      <path d="M8 1.8l2.2 2.2v3.1l1.9 1.9H3.9l1.9-1.9V4z" />
+      <path d="M8 9v5.2" />
+    </svg>
+  );
+}

@@ -187,6 +187,7 @@ body::before {
   *::before,
   *::after {
     animation-duration: 0.001ms !important;
+    animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
     scroll-behavior: auto !important;
@@ -198,6 +199,16 @@ body::before {
   to { opacity: 1; transform: none; }
 }
 
+@keyframes deck-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes deck-drop {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: none; }
+}
+
 @keyframes deck-shimmer {
   from { background-position: -180% 0; }
   to { background-position: 180% 0; }
@@ -205,6 +216,18 @@ body::before {
 
 @utility deck-rise {
   animation: deck-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Cards arrive on a cascade. The delay is set per card as --enter-delay and
+   capped by the caller, so a 500-repo account does not spend twelve seconds
+   drawing itself in. */
+@utility deck-enter {
+  animation: deck-enter 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@utility deck-drop {
+  animation: deck-drop 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
 @utility deck-skeleton {

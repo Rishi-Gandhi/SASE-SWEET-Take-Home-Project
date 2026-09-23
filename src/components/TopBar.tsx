@@ -1,6 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import type { Theme } from '../hooks/useTheme';
+import type { Spectrum } from '../lib/spectrum';
 import { DeckMark, MoonIcon, SearchIcon, SunIcon } from './icons';
+
+export interface CondensedProfile {
+  login: string;
+  name: string;
+  avatarUrl: string;
+  repoCount: number;
+  spectrum: Spectrum;
+}
 
 interface Props {
   username: string;
@@ -9,9 +18,19 @@ interface Props {
   onToggleTheme: () => void;
   onOpenPalette: () => void;
   busy: boolean;
+  /** Shown only once the full profile sheet has scrolled out of view. */
+  condensed: CondensedProfile | null;
 }
 
-export function TopBar({ username, onSubmit, theme, onToggleTheme, onOpenPalette, busy }: Props) {
+export function TopBar({
+  username,
+  onSubmit,
+  theme,
+  onToggleTheme,
+  onOpenPalette,
+  busy,
+  condensed,
+}: Props) {
   const [draft, setDraft] = useState(username);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -114,6 +133,48 @@ export function TopBar({ username, onSubmit, theme, onToggleTheme, onOpenPalette
           </button>
         </div>
       </div>
+
+      {condensed && (
+        <div className="deck-drop border-t border-line bg-page/85">
+          <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-2 sm:px-6">
+            <img
+              src={condensed.avatarUrl}
+              alt=""
+              width={22}
+              height={22}
+              className="size-[22px] shrink-0 rounded-[2px] border border-line object-cover"
+            />
+            <span className="truncate font-mono text-[12px] text-ink">@{condensed.login}</span>
+            <span className="hidden truncate font-display text-[12px] text-ink-2 sm:inline">
+              {condensed.name}
+            </span>
+
+            {/* The same spectrum as the sheet above, at strip height, so the
+                account's shape stays on screen while you read its repos. */}
+            {condensed.spectrum.segments.length > 0 && (
+              <div
+                className="ml-auto flex h-2 w-24 shrink-0 items-stretch gap-[2px] sm:w-40"
+                role="img"
+                aria-label={`Language mix: ${condensed.spectrum.segments
+                  .map((segment) => `${segment.label} ${Math.round(segment.share * 100)}%`)
+                  .join(', ')}`}
+              >
+                {condensed.spectrum.segments.map((segment) => (
+                  <span
+                    key={segment.label}
+                    className="rounded-[1px]"
+                    style={{ background: segment.color, flex: `${segment.share} 1 0` }}
+                  />
+                ))}
+              </div>
+            )}
+
+            <span className="shrink-0 font-mono text-[11px] tabular-nums text-ink-3">
+              {condensed.repoCount}
+            </span>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

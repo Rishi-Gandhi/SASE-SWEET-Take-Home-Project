@@ -46,7 +46,10 @@ async function search(name: string) {
 // Each test looks up a different username on purpose: successful profiles are
 // cached for the life of the module, so reusing one handle would serve the
 // previous test's fixture instead of the stub this test set up.
-beforeEach(() => window.history.replaceState(null, '', '/'));
+beforeEach(() => {
+  window.history.replaceState(null, '', '/');
+  localStorage.clear();
+});
 afterEach(() => {
   vi.unstubAllGlobals();
   resetRateLimit();
@@ -254,5 +257,139 @@ describe('Repo Deck', () => {
     expect(screen.getByRole('link', { name: 'toolbox' }).closest('li')).not.toHaveClass(
       'sm:col-span-2',
     );
+  });
+
+  it('compares two accounts side by side and merges their repositories', async () => {
+    // Route by handle so the two accounts return different data.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        const forSecond = url.includes('/second');
+        if (url.includes('/repos')) {
+          return Promise.resolve(
+            json(
+              forSecond
+                ? [makeRepo({ name: 'ripgrep', full_name: 'second/ripgrep', language: 'Rust', stargazers_count: 400 })]
+                : [makeRepo({ name: 'kernel', full_name: 'first/kernel', language: 'C', stargazers_count: 900 })],
+            ),
+          );
+        }
+        return Promise.resolve(
+          json(makeUser({ login: forSecond ? 'second' : 'first', public_repos: forSecond ? 1 : 1 })),
+        );
+      }),
+    );
+
+    render(<App />);
+    const user = await search('first');
+    await screen.findByRole('link', { name: 'kernel' });
+
+    await user.click(screen.getByRole('button', { name: /compare with/i }));
+    await user.type(screen.getByLabelText(/second account/i), 'second');
+    await user.click(screen.getByRole('button', { name: /^compare$/i }));
+
+    // Both sheets are present and the grid now holds both accounts' repos.
+    expect(await screen.findByText(/sheet 02 — comparison/i)).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByRole('link', { name: 'ripgrep' })).toBeInTheDocument());
+    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
+    expect(screen.getByText('2 repositories')).toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).toContain('vs=second'));
+  });
+
+  it('keeps the first account when the second one fails to load', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        if (url.includes('/ghost')) return Promise.resolve(json({}, { status: 404 }));
+        return Promise.resolve(url.includes('/repos') ? json(REPOS) : json(makeUser()));
+      }),
+    );
+
+    // Arrive already comparing, via a shared link.
+    window.history.replaceState(null, '', '/?u=solid&vs=ghost');
+    render(<App />);
+
+    // The failure is reported inline; the primary account still renders.
+    expect(await screen.findByText(/could not load @ghost/i)).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
+    expect(screen.queryByText(/sheet 02/i)).not.toBeInTheDocument();
+  });
+
+  it('pins an account and offers it again on the idle screen', async () => {
+    stubGitHub();
+    const first = render(<App />);
+    const user = await search('pin-me');
+    await screen.findByRole('link', { name: 'kernel' });
+
+    await user.click(screen.getByRole('button', { name: /^pin$/i }));
+    expect(await screen.findByRole('button', { name: /^pinned$/i })).toBeInTheDocument();
+
+    // Unmount before remounting, so only one App is ever on screen.
+    first.unmount();
+    window.history.replaceState(null, '', '/');
+    render(<App />);
+
+    // The pin survived and is offered as a shortcut on the empty view.
+    expect(await screen.findByRole('button', { name: 'octocat' })).toBeInTheDocument();
+    expect(screen.getByText(/pinned/i)).toBeInTheDocument();
+  });
+
+  it('staggers the cards without leaving any of them invisible', async () => {
+    stubGitHub();
+    render(<App />);
+    await search('stagger-user');
+    await screen.findByRole('link', { name: 'kernel' });
+
+    const items = document.querySelectorAll('li[data-flip-id]');
+    expect(items).toHaveLength(3);
+    // The delay is capped, and every card carries one.
+    for (const item of items) {
+      const delay = (item as HTMLElement).style.getPropertyValue('--enter-delay');
+      expect(delay).toMatch(/^\d+ms$/);
+      expect(Number.parseInt(delay, 10)).toBeLessThanOrEqual(14 * 22);
+    }
+  });
+
+  it('does not repaint existing language colours when a comparison starts', async () => {
+    // Primary writes C; the second account is overwhelmingly Python, so a key
+    // derived from the merged pool would demote C out of the top three.
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockImplementation((url: string) => {
+        const second = url.includes('/pythonist');
+        if (url.includes('/repos')) {
+          return Promise.resolve(
+            json(
+              second
+                ? Array.from({ length: 8 }, (_, i) =>
+                    makeRepo({ name: `py${i}`, full_name: `pythonist/py${i}`, language: 'Python' }),
+                  )
+                : [makeRepo({ name: 'kernel', full_name: 'cdev/kernel', language: 'C', stargazers_count: 900 })],
+            ),
+          );
+        }
+        return Promise.resolve(json(makeUser({ login: second ? 'pythonist' : 'cdev' })));
+      }),
+    );
+
+    render(<App />);
+    await search('cdev');
+    const dotColour = () =>
+      screen
+        .getByRole('button', { name: /^C$/ })
+        .querySelector('span[aria-hidden]')
+        ?.getAttribute('style');
+
+    await screen.findByRole('link', { name: 'kernel' });
+    const before = dotColour();
+    expect(before).toContain('--lang-1');
+
+    // Start comparing via a shared link rather than the form, to keep it short.
+    window.history.pushState(null, '', '/?u=cdev&vs=pythonist');
+    window.dispatchEvent(new PopStateEvent('popstate'));
+
+    await waitFor(() => expect(screen.getByText(/sheet 02 — comparison/i)).toBeInTheDocument());
+    // C is still the primary account's lead language, so it keeps its colour.
+    expect(dotColour()).toBe(before);
   });
 });

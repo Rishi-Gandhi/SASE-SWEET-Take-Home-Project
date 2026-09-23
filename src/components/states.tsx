@@ -4,8 +4,48 @@ import { AlertIcon, DeckMark, SearchIcon } from './icons';
 
 const SUGGESTIONS = ['torvalds', 'sindresorhus', 'gaearon', 'simonw', 'anthropics'];
 
+function HandleRow({
+  title,
+  handles,
+  onPick,
+}: {
+  title: string;
+  handles: string[];
+  onPick: (username: string) => void;
+}) {
+  if (handles.length === 0) return null;
+  return (
+    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
+      <span className="label">{title}</span>
+      {handles.map((name) => (
+        <button
+          key={name}
+          type="button"
+          onClick={() => onPick(name)}
+          className="cursor-pointer rounded-[2px] border border-line px-3 py-1 font-mono text-xs text-ink-2 transition-colors hover:border-accent hover:text-accent"
+        >
+          {name}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** First run: explain the app in one line and make it trivially easy to try. */
-export function IdleState({ onPick }: { onPick: (username: string) => void }) {
+export function IdleState({
+  onPick,
+  pinned,
+  recent,
+}: {
+  onPick: (username: string) => void;
+  pinned: string[];
+  recent: string[];
+}) {
+  // Anything already pinned would be a duplicate in the recents row.
+  const recentOnly = recent.filter(
+    (name) => !pinned.some((p) => p.toLowerCase() === name.toLowerCase()),
+  );
+
   return (
     <div className="deck-rise flex flex-col items-center px-4 py-16 text-center sm:py-24">
       <DeckMark className="size-12 text-accent" />
@@ -17,19 +57,11 @@ export function IdleState({ onPick }: { onPick: (username: string) => void }) {
         languages they actually build in.
       </p>
 
-      <div className="mt-7 flex flex-wrap items-center justify-center gap-2">
-        <span className="label">Try</span>
-        {SUGGESTIONS.map((name) => (
-          <button
-            key={name}
-            type="button"
-            onClick={() => onPick(name)}
-            className="cursor-pointer rounded-[2px] border border-line px-3 py-1 font-mono text-xs text-ink-2 transition-colors hover:border-accent hover:text-accent"
-          >
-            {name}
-          </button>
-        ))}
-      </div>
+      <HandleRow title="Pinned" handles={pinned} onPick={onPick} />
+      <HandleRow title="Recent" handles={recentOnly.slice(0, 6)} onPick={onPick} />
+      {pinned.length === 0 && recentOnly.length === 0 && (
+        <HandleRow title="Try" handles={SUGGESTIONS} onPick={onPick} />
+      )}
     </div>
   );
 }

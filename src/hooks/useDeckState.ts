@@ -4,6 +4,8 @@ import { useDebouncedValue } from './useDebouncedValue';
 
 export interface DeckState {
   username: string;
+  /** The second account, when comparing. */
+  vs: string | null;
   search: string;
   language: string | null;
   topic: string | null;
@@ -16,6 +18,7 @@ const DEFAULT_SORT: SortKey = 'stars';
 
 export const EMPTY_STATE: DeckState = {
   username: '',
+  vs: null,
   search: '',
   language: null,
   topic: null,
@@ -28,6 +31,7 @@ function parse(search: string): DeckState {
   const sort = params.get('sort');
   return {
     username: params.get('u') ?? '',
+    vs: params.get('vs'),
     search: params.get('q') ?? '',
     language: params.get('lang'),
     topic: params.get('topic'),
@@ -40,6 +44,7 @@ function parse(search: string): DeckState {
 function serialize(state: DeckState): string {
   const params = new URLSearchParams();
   if (state.username) params.set('u', state.username);
+  if (state.vs) params.set('vs', state.vs);
   if (state.search) params.set('q', state.search);
   if (state.language) params.set('lang', state.language);
   if (state.topic) params.set('topic', state.topic);

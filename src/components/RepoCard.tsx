@@ -13,6 +13,8 @@ interface Props {
   activeTopic: string | null;
   /** The lead card: wider cell, more detail, the drawing the sheet is about. */
   principal?: boolean;
+  /** Set only while comparing, when one grid holds two accounts' repos. */
+  owner?: string | null;
   onSelectLanguage: (language: string | null) => void;
   onSelectTopic: (topic: string | null) => void;
 }
@@ -31,6 +33,7 @@ export function RepoCard({
   isLanguageActive,
   activeTopic,
   principal = false,
+  owner = null,
   onSelectLanguage,
   onSelectTopic,
 }: Props) {
@@ -48,11 +51,13 @@ export function RepoCard({
 
   return (
     <article
-      data-flip-id={String(repo.id)}
-      className="sheet bp-corners group relative flex h-full min-w-0 flex-col p-4 transition-colors duration-200 hover:border-line-strong focus-within:border-line-strong"
+      className="sheet bp-corners deck-enter group relative flex h-full min-w-0 flex-col p-4 transition-colors duration-200 hover:border-line-strong focus-within:border-line-strong"
     >
       <div className="flex items-baseline justify-between gap-3">
-        <span className="label">Fig. {String(figure).padStart(2, '0')}</span>
+        <span className="label truncate">
+          Fig. {String(figure).padStart(2, '0')}
+          {owner && <span className="ml-2 text-ink-2">@{owner}</span>}
+        </span>
         <span
           className="flex shrink-0 items-center gap-1 font-mono text-[11px] tabular-nums text-ink-2"
           title={`${exactNumber(repo.stargazers_count)} stars`}
