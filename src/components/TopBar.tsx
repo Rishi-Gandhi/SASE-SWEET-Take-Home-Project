@@ -67,10 +67,10 @@ export function TopBar({
   return (
     <header className="sticky top-0 z-30 border-b border-line bg-page/85 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-2.5 px-4 py-3 sm:px-6">
-        <a href="./" className="flex shrink-0 items-center gap-2 text-ink" aria-label="Repo Deck home">
+        <a href="./" className="flex shrink-0 items-center gap-2 text-ink" aria-label="RepoBox home">
           <DeckMark className="size-6 text-accent" />
           <span className="hidden font-display text-[13px] font-bold uppercase tracking-[0.2em] sm:inline">
-            Repo Deck
+            RepoBox
           </span>
         </a>
 

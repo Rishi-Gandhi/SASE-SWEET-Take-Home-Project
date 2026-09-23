@@ -55,7 +55,7 @@ afterEach(() => {
   resetRateLimit();
 });
 
-describe('Repo Deck', () => {
+describe('RepoBox', () => {
   it('starts on the idle state with something to try', () => {
     stubGitHub();
     render(<App />);

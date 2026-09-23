@@ -1,11 +1,11 @@
-# Repo Deck
+# RepoBox
 
 A GitHub repository explorer drawn as a technical document. Enter a username, get their public
 repos — sortable, filterable, and weighed by the languages they actually build in.
 
 **Live demo: https://rishi-gandhi.github.io/SASE-SWEET-Take-Home-Project/**
 
-![Repo Deck: a profile sheet with language mix and activity strip above a grid of repository figures](docs/hero.png)
+![RepoBox: a profile sheet with language mix and activity strip above a grid of repository figures](docs/hero.png)
 
 ---
 
