@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { TopBar } from './components/TopBar';
 import type { CondensedProfile } from './components/TopBar';
 import { Hero } from './components/Hero';
+import { HowItWorks } from './components/HowItWorks';
 import { ProfileCard } from './components/ProfileCard';
 import { CompareSheet } from './components/CompareSheet';
 import { FilterBar } from './components/FilterBar';
@@ -28,7 +29,7 @@ const STAGGER_MS = 22;
 const STAGGER_CAP = 14;
 
 /** Page sections, top to bottom, and what the breadcrumb calls each. */
-const SECTIONS = ['hero', 'repositories'] as const;
+const SECTIONS = ['hero', 'how-it-works', 'repositories'] as const;
 const CRUMBS: Record<string, string> = {
   hero: 'Hero',
   'how-it-works': 'How it works',
@@ -217,6 +218,8 @@ export default function App() {
           onOpen={openUser}
           onSeeResults={() => scrollToResults('smooth')}
         />
+
+        <HowItWorks />
 
         <section id="repositories" className="repos" aria-label="Repositories">
           <div className="wrap">

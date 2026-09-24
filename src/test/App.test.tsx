@@ -451,4 +451,17 @@ describe('RepoBox', () => {
     await waitFor(() => expect(scrolled.map((element) => element.id)).toContain('repositories'));
     spy.mockRestore();
   });
+
+  it('explains itself in three readable steps', () => {
+    stubGitHub();
+    render(<App />);
+
+    const how = screen.getByRole('region', { name: /one username in\. ?every repo out\./i });
+    const steps = within(how).getAllByRole('listitem');
+    expect(steps.map((step) => step.textContent)).toEqual([
+      '01Enter a usernameType any GitHub username.',
+      "02Fetch public reposRepoBox calls GitHub's public API.",
+      '03Sort & filterOrder by stars or name, then search.',
+    ]);
+  });
 });
