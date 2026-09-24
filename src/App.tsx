@@ -171,6 +171,7 @@ export default function App() {
           profileState={profileState}
           pinned={pinned}
           recent={recent}
+          reducedMotion={reducedMotion}
           inputRef={searchInputRef}
           onOpen={setUsername}
         />

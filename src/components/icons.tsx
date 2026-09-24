@@ -116,3 +116,54 @@ export function PinIcon({ className = '' }: IconProps) {
     </svg>
   );
 }
+
+function Stroke({ className = '', children }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className={`${base} ${className}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </svg>
+  );
+}
+
+/** A closed book: GitHub's shorthand for a repository. */
+export function BookIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M3 2.5h8.5v11H3.8a.8.8 0 01-.8-.8z" />
+      <path d="M3 11.2c0-.6.4-1 1-1h7.5" />
+    </Stroke>
+  );
+}
+
+export function SortIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5 3v10M2.6 10.6L5 13l2.4-2.4M11 13V3M8.6 5.4L11 3l2.4 2.4" />
+    </Stroke>
+  );
+}
+
+export function FilterIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M2.5 3.5h11l-4 5v4l-3 1.5V8.5z" />
+    </Stroke>
+  );
+}
+
+export function CodeIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5M9 3L7 13" />
+    </Stroke>
+  );
+}
