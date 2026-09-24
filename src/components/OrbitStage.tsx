@@ -13,7 +13,9 @@ interface Props {
   /** Increments whenever the cube should shake: a handle that cannot exist. */
   shakeKey: number;
   reducedMotion: boolean;
-  /** The hero section: its visibility runs the loop, its pointer tilts the cube. */
+  /** Whether the hero is on screen; the loop only runs while it is. */
+  onScreen: boolean;
+  /** The hero section, whose pointer tilts the cube. */
   heroRef: RefObject<HTMLElement | null>;
 }
 
@@ -22,9 +24,10 @@ interface Props {
  * cube, and six pills. Decorative — every fact the pills show is also in the
  * repository list — so the whole stage is hidden from assistive technology.
  */
-export function OrbitStage({ pills, loading, shakeKey, reducedMotion, heroRef }: Props) {
+export function OrbitStage({ pills, loading, shakeKey, reducedMotion, onScreen, heroRef }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
-  const frame = useHeroLoop(heroRef, {
+  const frame = useHeroLoop({
+    onScreen,
     pillCount: pills.length,
     restartKey: pills,
     hold: loading,

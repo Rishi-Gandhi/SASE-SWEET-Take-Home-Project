@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { ProfileState } from '../hooks/useProfile';
+import { useOnScreen } from '../hooks/useOnScreen';
 import { topRepos } from '../lib/highlights';
 import { compactNumber } from '../lib/format';
 import { OrbitStage } from './OrbitStage';
@@ -58,6 +59,9 @@ export function Hero({
   onSeeResults,
 }: Props) {
   const heroRef = useRef<HTMLElement>(null);
+  // Arrives at 15% visible. Off screen, the loop stops and the CSS loops
+  // (smoke, rings, float) pause too, rather than ticking unseen.
+  const onScreen = useOnScreen(heroRef, 0.15);
   const pills = useMemo(() => pillsFor(profileState), [profileState]);
 
   // The cube shakes its head at a handle that cannot exist — one GitHub does
@@ -75,7 +79,12 @@ export function Hero({
   }, [profileState]);
 
   return (
-    <section ref={heroRef} id="hero" className="hero" aria-labelledby="hero-title">
+    <section
+      ref={heroRef}
+      id="hero"
+      className={`hero ${onScreen ? '' : 'is-offscreen'}`}
+      aria-labelledby="hero-title"
+    >
       {/* Smoke and dust: soft background light, never in the way. */}
       <div className="hero-fx" aria-hidden="true">
         <span className="hero-smoke" />
@@ -98,6 +107,7 @@ export function Hero({
         loading={profileState.status === 'loading'}
         shakeKey={shakeKey}
         reducedMotion={reducedMotion}
+        onScreen={onScreen}
         heroRef={heroRef}
       />
 

@@ -173,6 +173,11 @@
     isolation: isolate;
   }
 
+  /* Nothing loops unseen: off screen, every CSS loop in the hero holds. */
+  .hero.is-offscreen :is(.hero-smoke, .ring, .stage-float, .stage-glow) {
+    animation-play-state: paused;
+  }
+
   .hero-fx {
     position: absolute;
     inset: 0;
@@ -1371,9 +1376,10 @@
     margin: 0 0 14px;
   }
 
+  /* A 340px basis wraps the other controls before the placeholder is cut. */
   .field {
     display: flex;
-    flex: 1 1 260px;
+    flex: 1 1 340px;
     align-items: center;
     gap: 8px;
     min-height: 44px;

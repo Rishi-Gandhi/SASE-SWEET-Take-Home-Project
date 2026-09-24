@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import type { RefObject } from 'react';
 
 /** The hero's 13.4s cycle, in ms from the start of each loop. */
 export const HERO_TIMELINE = {
@@ -36,6 +35,8 @@ const STILL: HeroFrame = { lit: true, mapped: true, active: true, hot: null };
 const HOLD: HeroFrame = { lit: true, mapped: true, active: false, hot: null };
 
 interface Options {
+  /** Whether the hero is on screen; the loop only runs while it is. */
+  onScreen: boolean;
   /** How many pills the highlight travels around, in ranking order. */
   pillCount: number;
   /** Changing this restarts from the top, so new pills pop in fresh. */
@@ -52,32 +53,9 @@ interface Options {
  * timer is cleared the moment either stops being true, and the loop starts
  * again from the top when they return.
  */
-export function useHeroLoop(
-  heroRef: RefObject<Element | null>,
-  { pillCount, restartKey, hold, reducedMotion }: Options,
-): HeroFrame {
+export function useHeroLoop({ onScreen, pillCount, restartKey, hold, reducedMotion }: Options): HeroFrame {
   const [frame, setFrame] = useState<HeroFrame>(START);
-  const [onScreen, setOnScreen] = useState(false);
   const [tabVisible, setTabVisible] = useState(() => !document.hidden);
-
-  useEffect(() => {
-    const hero = heroRef.current;
-    // Absent in jsdom: the hero then holds its first frame, which is correct.
-    if (!hero || typeof IntersectionObserver !== 'function') return;
-
-    // Starts at 15% visible, stops only once it has left entirely. Reading
-    // the ratio matters: `isIntersecting` is true for any sliver at all.
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (!entry) return;
-        if (entry.intersectionRatio >= 0.15) setOnScreen(true);
-        else if (!entry.isIntersecting) setOnScreen(false);
-      },
-      { threshold: [0, 0.15] },
-    );
-    observer.observe(hero);
-    return () => observer.disconnect();
-  }, [heroRef]);
 
   useEffect(() => {
     const onChange = () => setTabVisible(!document.hidden);
