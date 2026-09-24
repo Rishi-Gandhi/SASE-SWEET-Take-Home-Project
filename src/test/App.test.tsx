@@ -6,9 +6,27 @@ import { makeRepo, makeUser } from './fixtures';
 import { resetRateLimit } from '../lib/rateLimit';
 
 const REPOS = [
-  makeRepo({ name: 'kernel', stargazers_count: 900, language: 'C', description: 'An operating system kernel' }),
-  makeRepo({ name: 'toolbox', stargazers_count: 120, language: 'Rust', description: 'Command line helpers' }),
-  makeRepo({ name: 'dotfiles', stargazers_count: 4, language: 'Shell', description: 'Personal config' }),
+  makeRepo({
+    name: 'kernel',
+    html_url: 'https://github.com/octocat/kernel',
+    stargazers_count: 900,
+    language: 'C',
+    description: 'An operating system kernel',
+  }),
+  makeRepo({
+    name: 'toolbox',
+    html_url: 'https://github.com/octocat/toolbox',
+    stargazers_count: 120,
+    language: 'Rust',
+    description: 'Command line helpers',
+  }),
+  makeRepo({
+    name: 'dotfiles',
+    html_url: 'https://github.com/octocat/dotfiles',
+    stargazers_count: 4,
+    language: 'Shell',
+    description: 'Personal config',
+  }),
 ];
 
 function json(body: unknown, init: ResponseInit = {}) {
@@ -43,6 +61,20 @@ async function search(name: string) {
   return user;
 }
 
+/** The repository names in the "All repositories" grid, in display order. */
+function listed(): string[] {
+  const list = screen.getByRole('list', { name: /all repositories/i });
+  return within(list)
+    .getAllByRole('heading', { level: 4 })
+    .map((heading) => heading.textContent ?? '');
+}
+
+/** Waits for the grid to appear, then reads it. */
+async function findListed(): Promise<string[]> {
+  await screen.findByRole('list', { name: /all repositories/i });
+  return listed();
+}
+
 // Each test looks up a different username on purpose: successful profiles are
 // cached for the life of the module, so reusing one handle would serve the
 // previous test's fixture instead of the stub this test set up.
@@ -68,10 +100,21 @@ describe('RepoBox', () => {
     render(<App />);
     await search('sorted-user');
 
-    expect(await screen.findByRole('heading', { name: /the octocat/i })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: '@octocat' })).toBeInTheDocument();
+    expect(listed()).toEqual(['kernel', 'toolbox', 'dotfiles']);
+  });
 
-    const links = screen.getAllByRole('link', { name: /kernel|toolbox|dotfiles/ });
-    expect(links.map((link) => link.textContent)).toEqual(['kernel', 'toolbox', 'dotfiles']);
+  it('links every repository to its page on GitHub', async () => {
+    stubGitHub();
+    render(<App />);
+    await search('link-user');
+    await findListed();
+
+    const list = screen.getByRole('list', { name: /all repositories/i });
+    const link = within(list).getByRole('link', { name: 'View on GitHub: kernel' });
+    expect(link).toHaveAttribute('href', 'https://github.com/octocat/kernel');
+    expect(link).toHaveAttribute('target', '_blank');
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer');
   });
 
   it('filters the list as you type and reports how many are left', async () => {
@@ -82,9 +125,10 @@ describe('RepoBox', () => {
     const filter = await screen.findByLabelText(/filter repositories/i);
     await user.type(filter, 'command line');
 
-    await waitFor(() => expect(screen.getByText('1 of 3 repositories')).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'toolbox' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'kernel' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText('Showing 1 of 3 repositories · sorted by stars')).toBeInTheDocument(),
+    );
+    expect(listed()).toEqual(['toolbox']);
   });
 
   it('offers a way out when the filters match nothing', async () => {
@@ -97,7 +141,7 @@ describe('RepoBox', () => {
 
     expect(await screen.findByText(/nothing matches those filters/i)).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /clear filters/i }));
-    await waitFor(() => expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument());
+    await waitFor(() => expect(listed()).toEqual(['kernel', 'toolbox', 'dotfiles']));
   });
 
   it('scopes the list when a language segment is clicked', async () => {
@@ -108,8 +152,59 @@ describe('RepoBox', () => {
     const segment = await screen.findByRole('button', { name: /filter by C$/i });
     await user.click(segment);
 
-    await waitFor(() => expect(screen.getByText('1 of 3 repositories')).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText('Showing 1 of 3 repositories · sorted by stars')).toBeInTheDocument(),
+    );
+    expect(listed()).toEqual(['kernel']);
+  });
+
+  it('filters by a language chip, and "All languages" undoes it', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('chip-user');
+    await findListed();
+
+    const chips = screen.getByRole('group', { name: /filter by language/i });
+    await user.click(within(chips).getByRole('button', { name: 'Rust' }));
+
+    expect(listed()).toEqual(['toolbox']);
+    expect(within(chips).getByRole('button', { name: 'Rust' })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(window.location.search).toContain('lang=Rust'));
+
+    await user.click(within(chips).getByRole('button', { name: 'All languages' }));
+    expect(listed()).toEqual(['kernel', 'toolbox', 'dotfiles']);
+  });
+
+  it('sorts from the segmented control and says how it is sorted', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('segment-user');
+    await findListed();
+
+    const sort = screen.getByRole('group', { name: /sort repositories/i });
+    expect(within(sort).getByRole('button', { name: 'Stars' })).toHaveAttribute('aria-pressed', 'true');
+
+    await user.click(within(sort).getByRole('button', { name: 'Name A–Z' }));
+
+    expect(listed()).toEqual(['dotfiles', 'kernel', 'toolbox']);
+    expect(within(sort).getByRole('button', { name: 'Name A–Z' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByText('Showing 3 of 3 repositories · sorted by name')).toBeInTheDocument();
+    await waitFor(() => expect(window.location.search).toContain('sort=name'));
+  });
+
+  it('hides forks on request', async () => {
+    stubGitHub({
+      repos: [...REPOS, makeRepo({ name: 'borrowed', fork: true, stargazers_count: 2, language: 'C' })],
+    });
+    render(<App />);
+    const user = await search('forks-user');
+    expect(await findListed()).toContain('borrowed');
+
+    await user.click(screen.getByRole('button', { name: 'Hide forks' }));
+
+    expect(listed()).not.toContain('borrowed');
+    expect(screen.getByRole('button', { name: 'Hide forks' })).toHaveAttribute('aria-pressed', 'true');
+    await waitFor(() => expect(window.location.search).toContain('src=1'));
   });
 
   it('keeps the view in the URL so it can be shared', async () => {
@@ -131,9 +226,49 @@ describe('RepoBox', () => {
     window.history.replaceState(null, '', '/?u=shared-user&q=toolbox&sort=name');
     render(<App />);
 
-    expect(await screen.findByRole('link', { name: 'toolbox' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'kernel' })).not.toBeInTheDocument();
+    expect(await findListed()).toEqual(['toolbox']);
     expect(screen.getByLabelText(/github username/i)).toHaveValue('shared-user');
+  });
+
+  it('features the most-starred repositories in the carousel', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('carousel-user');
+
+    const carousel = await screen.findByRole('group', { name: /top repositories/i });
+    const slides = within(carousel).getAllByRole('group');
+    expect(slides.map((slide) => slide.getAttribute('aria-label'))).toEqual([
+      '1 of 3: kernel',
+      '2 of 3: toolbox',
+      '3 of 3: dotfiles',
+    ]);
+    expect(within(slides[0]!).getByRole('link', { name: 'Open on GitHub: kernel' })).toHaveAttribute(
+      'href',
+      'https://github.com/octocat/kernel',
+    );
+    expect(slides[0]).toHaveClass('is-active');
+
+    // The buttons and the arrow keys move the active card, wrapping round.
+    await user.click(screen.getByRole('button', { name: /next repository/i }));
+    expect(slides[1]).toHaveClass('is-active');
+    await user.click(screen.getByRole('button', { name: /previous repository/i }));
+    await user.click(screen.getByRole('button', { name: /previous repository/i }));
+    expect(slides[2]).toHaveClass('is-active');
+
+    carousel.focus();
+    await user.keyboard('{ArrowRight}');
+    expect(slides[0]).toHaveClass('is-active');
+  });
+
+  it('keeps the carousel on the whole account while the list is filtered', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('portrait-user');
+    await user.type(await screen.findByLabelText(/filter repositories/i), 'dotfiles');
+
+    await waitFor(() => expect(listed()).toEqual(['dotfiles']));
+    const carousel = screen.getByRole('group', { name: /top repositories/i });
+    expect(within(carousel).getAllByRole('group')).toHaveLength(3);
   });
 
   it('explains a username that does not exist', async () => {
@@ -185,13 +320,14 @@ describe('RepoBox', () => {
       /opened @octocat: no public repositories yet/i,
     );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    expect(screen.queryByRole('group', { name: /top repositories/i })).not.toBeInTheDocument();
   });
 
   it('opens the command palette on the keyboard and runs a command from it', async () => {
     stubGitHub();
     render(<App />);
     const user = await search('palette-user');
-    await screen.findByRole('link', { name: 'kernel' });
+    await findListed();
 
     await user.keyboard('{Meta>}k{/Meta}');
     const palette = await screen.findByRole('dialog', { name: /command palette/i });
@@ -202,25 +338,24 @@ describe('RepoBox', () => {
 
     // The palette closes and the list is now alphabetical.
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    const links = screen.getAllByRole('link', { name: /kernel|toolbox|dotfiles/ });
-    expect(links.map((l) => l.textContent)).toEqual(['dotfiles', 'kernel', 'toolbox']);
+    expect(listed()).toEqual(['dotfiles', 'kernel', 'toolbox']);
   });
 
   it('closes the palette on Escape without changing anything', async () => {
     stubGitHub();
     render(<App />);
     const user = await search('escape-user');
-    await screen.findByRole('link', { name: 'kernel' });
+    await findListed();
 
     await user.keyboard('{Meta>}k{/Meta}');
     expect(await screen.findByRole('dialog')).toBeInTheDocument();
 
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
+    expect(listed()).toEqual(['kernel', 'toolbox', 'dotfiles']);
   });
 
-  it('filters by a topic chip and puts it in the URL', async () => {
+  it('filters by a topic chip, puts it in the URL, and lets it be removed', async () => {
     stubGitHub({
       repos: [
         makeRepo({ name: 'kernel', stargazers_count: 900, language: 'C', topics: ['os', 'kernel'] }),
@@ -233,10 +368,14 @@ describe('RepoBox', () => {
     const chip = await screen.findByRole('button', { name: 'cli' });
     await user.click(chip);
 
-    await waitFor(() => expect(screen.getByText('1 of 2 repositories')).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'toolbox' })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'kernel' })).not.toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getByText('Showing 1 of 2 repositories · sorted by stars')).toBeInTheDocument(),
+    );
+    expect(listed()).toEqual(['toolbox']);
     await waitFor(() => expect(window.location.search).toContain('topic=cli'));
+
+    await user.click(screen.getByRole('button', { name: /remove topic filter: cli/i }));
+    expect(listed()).toEqual(['kernel', 'toolbox']);
   });
 
   it('shows the remaining API budget once GitHub reports it', async () => {
@@ -254,19 +393,6 @@ describe('RepoBox', () => {
     expect(meter).toHaveAttribute('aria-valuenow', '48');
     expect(meter).toHaveAttribute('aria-valuemax', '60');
     expect(screen.getByText('48/60')).toBeInTheDocument();
-  });
-
-  it('gives the lead repository the lead cell', async () => {
-    stubGitHub();
-    render(<App />);
-    await search('bento-user');
-
-    const lead = await screen.findByRole('link', { name: 'kernel' });
-    // The principal card is the one card that spans two columns.
-    expect(lead.closest('li')).toHaveClass('sm:col-span-2');
-    expect(screen.getByRole('link', { name: 'toolbox' }).closest('li')).not.toHaveClass(
-      'sm:col-span-2',
-    );
   });
 
   it('compares two accounts side by side and merges their repositories', async () => {
@@ -292,17 +418,16 @@ describe('RepoBox', () => {
 
     render(<App />);
     const user = await search('first');
-    await screen.findByRole('link', { name: 'kernel' });
+    await findListed();
 
     await user.click(screen.getByRole('button', { name: /compare with/i }));
     await user.type(screen.getByLabelText(/second account/i), 'second');
     await user.click(screen.getByRole('button', { name: /^compare$/i }));
 
-    // Both sheets are present and the grid now holds both accounts' repos.
-    expect(await screen.findByText(/sheet 02 — comparison/i)).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByRole('link', { name: 'ripgrep' })).toBeInTheDocument());
-    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
-    expect(screen.getByText('2 repositories')).toBeInTheDocument();
+    // Both accounts are present and the grid now holds both accounts' repos.
+    expect(await screen.findByRole('region', { name: /comparison/i })).toBeInTheDocument();
+    await waitFor(() => expect(listed()).toEqual(['kernel', 'ripgrep']));
+    expect(screen.getByText('Showing 2 of 2 repositories · sorted by stars')).toBeInTheDocument();
     await waitFor(() => expect(window.location.search).toContain('vs=second'));
   });
 
@@ -321,15 +446,15 @@ describe('RepoBox', () => {
 
     // The failure is reported inline; the primary account still renders.
     expect(await screen.findByText(/could not load @ghost/i)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'kernel' })).toBeInTheDocument();
-    expect(screen.queryByText(/sheet 02/i)).not.toBeInTheDocument();
+    expect(listed()).toContain('kernel');
+    expect(screen.queryByRole('region', { name: /comparison/i })).not.toBeInTheDocument();
   });
 
   it('pins an account and offers it again on the idle screen', async () => {
     stubGitHub();
     const first = render(<App />);
     const user = await search('pin-me');
-    await screen.findByRole('link', { name: 'kernel' });
+    await findListed();
 
     await user.click(screen.getByRole('button', { name: /^pin$/i }));
     expect(await screen.findByRole('button', { name: /^pinned$/i })).toBeInTheDocument();
@@ -348,7 +473,7 @@ describe('RepoBox', () => {
     stubGitHub();
     render(<App />);
     await search('stagger-user');
-    await screen.findByRole('link', { name: 'kernel' });
+    await findListed();
 
     const items = document.querySelectorAll('li[data-flip-id]');
     expect(items).toHaveLength(3);
@@ -356,13 +481,13 @@ describe('RepoBox', () => {
     for (const item of items) {
       const delay = (item as HTMLElement).style.getPropertyValue('--enter-delay');
       expect(delay).toMatch(/^\d+ms$/);
-      expect(Number.parseInt(delay, 10)).toBeLessThanOrEqual(14 * 22);
+      expect(Number.parseInt(delay, 10)).toBeLessThanOrEqual(8 * 35);
     }
   });
 
   it('does not repaint existing language colours when a comparison starts', async () => {
-    // Primary writes C; the second account is overwhelmingly Python, so a key
-    // derived from the merged pool would demote C out of the top three.
+    // Primary writes C; the second account is overwhelmingly Python. Colours
+    // are keyed by language name, so nothing already on screen may change.
     vi.stubGlobal(
       'fetch',
       vi.fn().mockImplementation((url: string) => {
@@ -384,22 +509,22 @@ describe('RepoBox', () => {
 
     render(<App />);
     await search('cdev');
+    await findListed();
     const dotColour = () =>
-      screen
+      within(screen.getByRole('list', { name: /all repositories/i }))
         .getByRole('button', { name: /^C$/ })
         .querySelector('span[aria-hidden]')
         ?.getAttribute('style');
 
-    await screen.findByRole('link', { name: 'kernel' });
     const before = dotColour();
-    expect(before).toContain('--lang-1');
+    // GitHub's colour for C, #555555.
+    expect(before).toContain('rgb(85, 85, 85)');
 
     // Start comparing via a shared link rather than the form, to keep it short.
     window.history.pushState(null, '', '/?u=cdev&vs=pythonist');
     window.dispatchEvent(new PopStateEvent('popstate'));
 
-    await waitFor(() => expect(screen.getByText(/sheet 02 — comparison/i)).toBeInTheDocument());
-    // C is still the primary account's lead language, so it keeps its colour.
+    await waitFor(() => expect(screen.getByRole('region', { name: /comparison/i })).toBeInTheDocument());
     expect(dotColour()).toBe(before);
   });
 

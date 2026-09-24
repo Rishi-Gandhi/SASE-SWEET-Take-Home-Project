@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { topRepos } from '../lib/highlights';
+import { topRepos, towerHeight } from '../lib/highlights';
 import { makeRepo } from './fixtures';
 
 describe('topRepos', () => {
@@ -30,5 +30,28 @@ describe('topRepos', () => {
     const before = repos.map((repo) => repo.name);
     topRepos(repos, 3);
     expect(repos.map((repo) => repo.name)).toEqual(before);
+  });
+});
+
+describe('towerHeight', () => {
+  it('gives the leader the full four cubes', () => {
+    expect(towerHeight(2418, 2418)).toBe(4);
+  });
+
+  it('never drops below one cube, even for no stars', () => {
+    expect(towerHeight(0, 2418)).toBe(1);
+    expect(towerHeight(0, 0)).toBe(1);
+  });
+
+  it('scales by order of magnitude rather than linearly', () => {
+    // 50 stars is 2% of 2,418 — a single cube linearly, but a real presence
+    // on a log scale.
+    expect(towerHeight(50, 2418)).toBe(3);
+    expect(towerHeight(12, 2418)).toBe(2);
+  });
+
+  it('keeps the heights ordered with the stars', () => {
+    const heights = [0, 3, 12, 50, 400, 2418].map((stars) => towerHeight(stars, 2418));
+    expect([...heights].sort((a, b) => a - b)).toEqual(heights);
   });
 });

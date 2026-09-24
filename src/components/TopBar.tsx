@@ -1,4 +1,5 @@
 import type { Spectrum } from '../lib/spectrum';
+import { UNKNOWN_LANGUAGE_COLOR, languageColor } from '../lib/languages';
 
 export interface CondensedProfile {
   login: string;
@@ -55,7 +56,10 @@ export function TopBar({ crumb, condensed, onOpenPalette }: Props) {
                   <span
                     key={segment.label}
                     className="rounded-full"
-                    style={{ background: segment.color, flex: `${segment.share} 1 0` }}
+                    style={{
+                      background: segment.isOther ? UNKNOWN_LANGUAGE_COLOR : languageColor(segment.label),
+                      flex: `${segment.share} 1 0`,
+                    }}
                   />
                 ))}
               </div>

@@ -987,4 +987,580 @@
     /* Clears the sticky top bar when scrolled to. */
     scroll-margin-top: 48px;
   }
+
+  .sec-h {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 16px;
+    margin: 0 0 18px;
+  }
+
+  .sec-h .label {
+    margin: 0;
+  }
+
+  .sec-title {
+    margin: 6px 0 0;
+    font: 500 clamp(22px, 2.6vw, 30px) / 1.1 var(--ff-display);
+    letter-spacing: -0.025em;
+  }
+
+  .btn-primary:disabled {
+    filter: none;
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
+
+  /* ---------- pills: chips, toggles, and small links ---------- */
+
+  .chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: 500 13px/1 var(--ff-body);
+    text-decoration: none;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+  }
+
+  .chip:hover {
+    color: var(--fg);
+    border-color: var(--panel-hover);
+  }
+
+  .chip[aria-pressed="true"] {
+    border-color: var(--fg);
+    background-color: var(--fg);
+    color: var(--bg);
+  }
+
+  .chip-quiet {
+    border-style: dashed;
+  }
+
+  .round-btn {
+    display: grid;
+    place-items: center;
+    width: 44px;
+    height: 44px;
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    background: var(--panel);
+    color: var(--fg);
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+
+  .round-btn:hover {
+    border-color: var(--panel-hover);
+  }
+
+  .round-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* A faint ring keeps near-black language colours (C, Lua) visible. */
+  .lang-dot {
+    width: 9px;
+    height: 9px;
+    flex: none;
+    border-radius: 50%;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2);
+  }
+
+  .lang {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13px;
+  }
+
+  .gh-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    min-height: 32px;
+    padding: 6px 0;
+    color: var(--fg);
+    font: 600 13px/1 var(--ff-body);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 4px;
+    transition: color 0.2s;
+  }
+
+  .gh-link:hover {
+    color: var(--accent-2);
+  }
+
+  /* ---------- profile ---------- */
+
+  .profile {
+    padding-bottom: 28px;
+    border-bottom: 1px solid var(--faint);
+  }
+
+  .profile-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 18px;
+  }
+
+  .profile-avatar {
+    width: 64px;
+    height: 64px;
+    flex: none;
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    object-fit: cover;
+  }
+
+  .profile-name {
+    margin: 0;
+    font: 500 clamp(24px, 3vw, 34px) / 1.1 var(--ff-display);
+    letter-spacing: -0.025em;
+    overflow-wrap: anywhere;
+  }
+
+  .profile-meta {
+    margin: 4px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .profile-bio {
+    max-width: 64ch;
+    margin: 10px 0 0;
+    font-size: 14px;
+  }
+
+  .profile-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+    margin: 10px 0 0;
+    padding: 0;
+    list-style: none;
+    color: var(--muted);
+  }
+
+  .profile-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .profile-charts {
+    display: grid;
+    gap: 28px;
+    margin-top: 28px;
+  }
+
+  @media (min-width: 900px) {
+    .profile-charts {
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+    }
+  }
+
+  /* ---------- carousel ---------- */
+
+  /* Full-bleed: the track breaks out of the 1200px column to the viewport
+     edges, and pads half a viewport less half a card on each side so the
+     first and last cards can still sit centred. */
+  .carousel-track {
+    --cw: min(430px, 80vw);
+    position: relative;
+    display: flex;
+    gap: 22px;
+    margin-inline: calc(50% - 50vw);
+    padding: 10px calc(50vw - var(--cw) / 2) 22px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    scrollbar-width: none;
+  }
+
+  .carousel-track::-webkit-scrollbar {
+    display: none;
+  }
+
+  .carousel-card {
+    position: relative;
+    display: flex;
+    flex: none;
+    flex-direction: column;
+    width: var(--cw);
+    aspect-ratio: 1 / 1.02;
+    padding: 24px;
+    overflow: hidden;
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    scroll-snap-align: center;
+    opacity: 0.38;
+    transition: opacity 0.5s, border-color 0.3s;
+  }
+
+  /* A focused neighbour is readable too, not only the centred card. */
+  .carousel-card.is-active,
+  .carousel-card:focus-within {
+    opacity: 1;
+  }
+
+  .carousel-card:hover {
+    border-color: var(--panel-hover);
+  }
+
+  .carousel-card .label {
+    margin: 0;
+  }
+
+  .carousel-name {
+    margin: 8px 0 0;
+    font: 500 22px/1.15 var(--ff-display);
+    letter-spacing: -0.025em;
+    overflow-wrap: anywhere;
+  }
+
+  .carousel-desc {
+    max-width: 34ch;
+    margin: 8px 0 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .carousel-desc.is-empty {
+    font-style: italic;
+  }
+
+  .carousel-foot {
+    position: relative;
+    z-index: 2;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: auto;
+  }
+
+  /* ---------- isometric tower ---------- */
+
+  .iso {
+    position: relative;
+    flex: 1;
+    min-height: 150px;
+  }
+
+  .iso-floor {
+    position: absolute;
+    top: 70%;
+    left: 50%;
+    width: 190px;
+    height: 190px;
+    border: 1px solid var(--faint);
+    background-image:
+      linear-gradient(var(--faint) 1px, transparent 1px),
+      linear-gradient(90deg, var(--faint) 1px, transparent 1px);
+    background-size: 26px 26px;
+    transform: translate(-50%, -50%) rotateX(54.74deg) rotateZ(45deg);
+  }
+
+  /* Each level rises 0.816 of a cube — see ISO_STACK_STEP in howItWorks. */
+  .iso-cube {
+    --s: 40px;
+    position: absolute;
+    top: 66%;
+    left: 50%;
+    z-index: calc(10 + var(--j));
+    transform: translate(-50%, calc(-50% - var(--j) * var(--s) * 0.816));
+  }
+
+  .carousel-card.is-active .iso-cube {
+    animation: cube-rise 0.7s cubic-bezier(0.3, 1.3, 0.5, 1) both;
+    animation-delay: calc(var(--j) * 90ms);
+  }
+
+  @keyframes cube-rise {
+    from {
+      opacity: 0;
+      translate: 0 -30px;
+    }
+    to {
+      opacity: 1;
+      translate: 0 0;
+    }
+  }
+
+  .iso-stars {
+    position: absolute;
+    top: 10px;
+    right: 4px;
+    z-index: 30;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 10px;
+    border: 1px solid var(--pill-line);
+    border-radius: 999px;
+    background: var(--pill-bg);
+    color: var(--pill-fg);
+    font: 500 12px/1 var(--ff-mono);
+  }
+
+  .iso-stars svg {
+    width: 12px;
+    height: 12px;
+    color: var(--accent-2);
+  }
+
+  /* ---------- controls ---------- */
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 14px;
+  }
+
+  .field {
+    display: flex;
+    flex: 1 1 260px;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--input-line);
+    border-radius: 999px;
+    background: var(--input-bg);
+  }
+
+  .field:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .field svg {
+    width: 16px;
+    height: 16px;
+    flex: none;
+    color: var(--muted);
+  }
+
+  .field input {
+    flex: 1;
+    min-width: 0;
+    padding: 12px 0;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font: 15px/1 var(--ff-body);
+  }
+
+  .field input:focus-visible {
+    outline: none;
+  }
+
+  .field input::placeholder {
+    color: var(--muted);
+  }
+
+  .seg {
+    display: inline-flex;
+    gap: 3px;
+    padding: 3px;
+    border: 1px solid var(--input-line);
+    border-radius: 999px;
+    background: var(--input-bg);
+  }
+
+  .seg button {
+    min-height: 36px;
+    padding: 0 14px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: 600 13px/1 var(--ff-body);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.2s, background-color 0.2s;
+  }
+
+  .seg button:hover {
+    color: var(--fg);
+  }
+
+  .seg button[aria-pressed="true"] {
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .langs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 18px;
+  }
+
+  .count {
+    margin: 0 0 14px;
+    color: var(--muted);
+    font: 500 12px/1.4 var(--ff-mono);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* ---------- repository cards ---------- */
+
+  /* min(300px, 100%) so a 320px phone gets one column instead of overflow. */
+  .repo-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+    gap: 14px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .repo-card {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    height: 100%;
+    padding: 18px 18px 16px;
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    transition: border-color 0.2s;
+  }
+
+  .repo-card:hover,
+  .repo-card:focus-within {
+    border-color: var(--panel-hover);
+  }
+
+  .repo-card-top {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+  }
+
+  .repo-card-name {
+    min-width: 0;
+    margin: 0;
+    font: 600 17px/1.25 var(--ff-display);
+    overflow-wrap: anywhere;
+  }
+
+  .repo-card-stars {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: 5px;
+    font: 500 13px/1 var(--ff-mono);
+    white-space: nowrap;
+  }
+
+  .repo-card-stars svg {
+    width: 13px;
+    height: 13px;
+    color: var(--accent-2);
+  }
+
+  .repo-card-desc {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+  }
+
+  .repo-card-desc.is-empty {
+    font-style: italic;
+  }
+
+  .repo-card-topics {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .topic-chip {
+    min-height: 26px;
+    padding: 0 9px;
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: 500 11px/1 var(--ff-mono);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .topic-chip:hover {
+    color: var(--fg);
+    border-color: var(--panel-hover);
+  }
+
+  .topic-chip[aria-pressed="true"] {
+    border-color: var(--fg);
+    background: var(--fg);
+    color: var(--bg);
+  }
+
+  .repo-card-facts {
+    margin: 0;
+    color: var(--muted);
+  }
+
+  .repo-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+
+  .lang-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    min-height: 32px;
+    margin-left: -8px;
+    padding: 0 8px;
+    border: 0;
+    border-radius: 999px;
+    background: transparent;
+    color: var(--fg);
+    font: 13px/1 var(--ff-body);
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .lang-btn:hover {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .lang-btn[aria-pressed="true"] {
+    background: var(--accent-soft);
+  }
 }

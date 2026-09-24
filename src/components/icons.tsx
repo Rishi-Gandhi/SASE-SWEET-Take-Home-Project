@@ -167,3 +167,35 @@ export function CodeIcon({ className = '' }: IconProps) {
     </Stroke>
   );
 }
+
+export function ChevronLeftIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M10 3L5 8l5 5" />
+    </Stroke>
+  );
+}
+
+export function ChevronRightIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M6 3l5 5-5 5" />
+    </Stroke>
+  );
+}
+
+export function PauseIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5.5 3.5v9M10.5 3.5v9" />
+    </Stroke>
+  );
+}
+
+export function PlayIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={`${base} ${className}`} fill="currentColor">
+      <path d="M5 3.2v9.6L12.5 8z" />
+    </svg>
+  );
+}

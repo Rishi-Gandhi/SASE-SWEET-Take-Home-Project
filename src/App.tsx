@@ -3,10 +3,11 @@ import { TopBar } from './components/TopBar';
 import type { CondensedProfile } from './components/TopBar';
 import { Hero } from './components/Hero';
 import { HowItWorks } from './components/HowItWorks';
-import { ProfileCard } from './components/ProfileCard';
+import { ProfileHeader } from './components/ProfileHeader';
 import { CompareSheet } from './components/CompareSheet';
-import { FilterBar } from './components/FilterBar';
-import { RepoCard } from './components/RepoCard';
+import { TopReposCarousel } from './components/TopReposCarousel';
+import { RepoControls } from './components/RepoControls';
+import { RepoList } from './components/RepoList';
 import { CommandPalette } from './components/CommandPalette';
 import { RateLimitMeter } from './components/RateLimitMeter';
 import { ErrorState, LoadingState, NoMatchesState, NoReposState, ReposIdle } from './components/states';
@@ -19,14 +20,10 @@ import { useScrolledPast } from './hooks/useScrolledPast';
 import { useActiveSection } from './hooks/useActiveSection';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
 import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion';
-import { languageOptions, selectRepos, topicOptions, totalStars } from './lib/repos';
-import { buildSpectrum, languageColorMap } from './lib/spectrum';
+import { languageOptions, selectRepos, totalStars } from './lib/repos';
+import { buildSpectrum } from './lib/spectrum';
 import { buildActivity } from './lib/activity';
-import { compareProfiles, mergeRepos, repoOwner } from './lib/compare';
-
-/** Cards cascade in, but the cascade is capped so a long list is not a wait. */
-const STAGGER_MS = 22;
-const STAGGER_CAP = 14;
+import { compareProfiles, mergeRepos } from './lib/compare';
 
 /** Page sections, top to bottom, and what the breadcrumb calls each. */
 const SECTIONS = ['hero', 'how-it-works', 'repositories'] as const;
@@ -48,7 +45,7 @@ export default function App() {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const gridRef = useRef<HTMLUListElement>(null);
   // Held in state, not a ref: it mounts only once a profile loads.
-  const [sheetNode, setSheetNode] = useState<HTMLDivElement | null>(null);
+  const [headerNode, setHeaderNode] = useState<HTMLElement | null>(null);
 
   const profile = profileState.status === 'ready' ? profileState.profile : null;
   const vsProfile = vsState.status === 'ready' ? vsState.profile : null;
@@ -76,8 +73,6 @@ export default function App() {
   }, [profile, vsProfile, comparing]);
 
   const languages = useMemo(() => languageOptions(pool), [pool]);
-  const topics = useMemo(() => topicOptions(pool), [pool]);
-  const colorMap = useMemo(() => languageColorMap(spectrum), [spectrum]);
 
   const comparison = useMemo(
     () =>
@@ -116,7 +111,7 @@ export default function App() {
   );
 
   // The top bar is 48px tall, so "scrolled past" starts beneath it.
-  const collapsed = useScrolledPast(sheetNode, '-48px 0px 0px 0px');
+  const collapsed = useScrolledPast(headerNode, '-48px 0px 0px 0px');
 
   const condensed: CondensedProfile | null =
     collapsed && profile
@@ -127,10 +122,6 @@ export default function App() {
           spectrum,
         }
       : null;
-
-  // The bar scale is the biggest repo currently on screen, so the comparison
-  // stays meaningful after filtering down to a handful of small projects.
-  const maxStars = visible[0] ? Math.max(...visible.map((repo) => repo.stargazers_count)) : 0;
 
   const hasFilters = Boolean(state.search || state.language || state.topic || state.sourcesOnly);
   const clearFilters = useCallback(
@@ -233,117 +224,99 @@ export default function App() {
 
             {profile && (
               <>
-                <div ref={setSheetNode}>
-                  <ProfileCard
-                    profile={profile}
-                    spectrum={spectrum}
-                    activity={activity}
-                    totalStars={stars}
-                    activeLanguage={state.language}
-                    isPinned={isPinned(profile.user.login)}
-                    comparing={Boolean(state.vs)}
-                    onSelectLanguage={(language) => update({ language })}
-                    onTogglePin={() => togglePin(profile.user.login)}
-                    onCompare={startComparing}
-                  />
-                </div>
+                <ProfileHeader
+                  profile={profile}
+                  totalStars={stars}
+                  spectrum={spectrum}
+                  activity={activity}
+                  activeLanguage={state.language}
+                  isPinned={isPinned(profile.user.login)}
+                  comparing={Boolean(state.vs)}
+                  onSelectLanguage={(language) => update({ language })}
+                  onTogglePin={() => togglePin(profile.user.login)}
+                  onCompare={startComparing}
+                  headerRef={setHeaderNode}
+                />
 
                 {/* A failed second account must not take the first one down with
                     it — the comparison degrades, the page does not. */}
                 {state.vs && vsState.status === 'loading' && (
-                  <p className="sheet mt-4 p-4 font-mono text-[12px] text-ink-3">
-                    Loading @{state.vs} for comparison…
-                  </p>
+                  <p className="panel label mt-8 p-4 text-muted">Loading @{state.vs} for comparison…</p>
                 )}
 
                 {state.vs && vsState.status === 'error' && (
                   <div
                     role="alert"
-                    className="sheet mt-4 flex flex-wrap items-center justify-between gap-3 p-4"
-                    style={{ borderColor: 'color-mix(in oklab, var(--critical) 35%, transparent)' }}
+                    className="panel mt-8 flex flex-wrap items-center justify-between gap-3 p-4"
+                    style={{ borderColor: 'color-mix(in oklab, var(--critical) 45%, transparent)' }}
                   >
-                    <p className="font-mono text-[12px] text-ink-2">
+                    <p className="text-sm text-muted">
                       Could not load @{state.vs} — {vsState.error.message}
                     </p>
-                    <button
-                      type="button"
-                      onClick={stopComparing}
-                      className="cursor-pointer rounded-[2px] border border-line px-2 py-1 font-mono text-[11px] text-ink-2 transition-colors hover:border-accent hover:text-accent"
-                    >
+                    <button type="button" onClick={stopComparing} className="chip">
                       Stop comparing
                     </button>
                   </div>
                 )}
 
                 {comparing && vsProfile && comparison && (
-                  <CompareSheet
-                    a={profile}
-                    b={vsProfile}
-                    comparison={comparison}
-                    onStop={stopComparing}
-                  />
+                  <CompareSheet a={profile} b={vsProfile} comparison={comparison} onStop={stopComparing} />
                 )}
 
                 {pool.length === 0 ? (
-                  <div className="mt-4">
+                  <div className="mt-10">
                     <NoReposState login={profile.user.login} />
                   </div>
                 ) : (
-                  <div className="mt-5">
-                    <FilterBar
-                      search={state.search}
-                      onSearchChange={(search) => update({ search })}
-                      language={state.language}
-                      languages={languages}
-                      onLanguageChange={(language) => update({ language })}
-                      topic={state.topic}
-                      topics={topics}
-                      onTopicChange={(topic) => update({ topic })}
-                      sort={state.sort}
-                      onSortChange={(sort) => update({ sort })}
-                      sourcesOnly={state.sourcesOnly}
-                      onSourcesOnlyChange={(sourcesOnly) => update({ sourcesOnly })}
-                      shown={visible.length}
-                      total={pool.length}
+                  <>
+                    {/* Keyed by account, so a new one starts from its first card. */}
+                    <TopReposCarousel
+                      key={profile.user.login}
+                      repos={profile.repos}
+                      reducedMotion={reducedMotion}
                     />
 
-                    {visible.length === 0 ? (
-                      <NoMatchesState onClear={clearFilters} />
-                    ) : (
-                      <ul ref={gridRef} className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                        {visible.map((repo, index) => (
-                          <li
-                            key={repo.id}
-                            data-flip-id={String(repo.id)}
-                            // The lead card in the current ordering gets the lead
-                            // cell, so the grid has a reading order instead of
-                            // thirty identical boxes.
-                            className={`h-full min-w-0 ${index === 0 ? 'sm:col-span-2' : ''}`}
-                            style={
-                              {
-                                '--enter-delay': `${Math.min(index, STAGGER_CAP) * STAGGER_MS}ms`,
-                              } as React.CSSProperties
-                            }
-                          >
-                            <RepoCard
-                              repo={repo}
-                              figure={index + 1}
-                              maxStars={maxStars}
-                              principal={index === 0}
-                              owner={comparing ? repoOwner(repo) : null}
-                              languageColor={
-                                (repo.language && colorMap.get(repo.language)) || 'var(--lang-other)'
-                              }
-                              isLanguageActive={state.language !== null && state.language === repo.language}
-                              activeTopic={state.topic}
-                              onSelectLanguage={(language) => update({ language })}
-                              onSelectTopic={(topic) => update({ topic })}
-                            />
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
+                    <section className="mt-14" aria-labelledby="all-heading">
+                      <div className="sec-h">
+                        <div>
+                          <p className="label">Search · Sort · Filter</p>
+                          <h3 id="all-heading" className="sec-title">
+                            All repositories
+                          </h3>
+                        </div>
+                      </div>
+
+                      <RepoControls
+                        search={state.search}
+                        onSearchChange={(search) => update({ search })}
+                        sort={state.sort}
+                        onSortChange={(sort) => update({ sort })}
+                        sourcesOnly={state.sourcesOnly}
+                        onSourcesOnlyChange={(sourcesOnly) => update({ sourcesOnly })}
+                        topic={state.topic}
+                        onTopicChange={(topic) => update({ topic })}
+                        language={state.language}
+                        languages={languages}
+                        onLanguageChange={(language) => update({ language })}
+                        shown={visible.length}
+                        total={pool.length}
+                      />
+
+                      {visible.length === 0 ? (
+                        <NoMatchesState onClear={clearFilters} />
+                      ) : (
+                        <RepoList
+                          repos={visible}
+                          gridRef={gridRef}
+                          comparing={comparing}
+                          activeLanguage={state.language}
+                          activeTopic={state.topic}
+                          onSelectLanguage={(language) => update({ language })}
+                          onSelectTopic={(topic) => update({ topic })}
+                        />
+                      )}
+                    </section>
+                  </>
                 )}
               </>
             )}

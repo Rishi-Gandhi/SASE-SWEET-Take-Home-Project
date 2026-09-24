@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildSpectrum, languageColorMap } from '../lib/spectrum';
+import { buildSpectrum } from '../lib/spectrum';
 import { makeRepo } from './fixtures';
 
 const withLanguages = (...languages: Array<string | null>) =>
@@ -42,15 +42,6 @@ describe('buildSpectrum', () => {
     expect(last.isOther).toBe(false);
   });
 
-  it('assigns the three validated colour slots in rank order', () => {
-    const spectrum = buildSpectrum(withLanguages('Go', 'Go', 'Rust', 'C'));
-    expect(spectrum.segments.map((segment) => segment.color)).toEqual([
-      'var(--lang-1)',
-      'var(--lang-2)',
-      'var(--lang-3)',
-    ]);
-  });
-
   it('breaks count ties alphabetically so the order is deterministic', () => {
     const spectrum = buildSpectrum(withLanguages('Rust', 'Go'));
     expect(spectrum.segments.map((segment) => segment.label)).toEqual(['Go', 'Rust']);
@@ -60,19 +51,5 @@ describe('buildSpectrum', () => {
     const spectrum = buildSpectrum(withLanguages('Go', 'Rust', 'C', 'Zig', 'Elm', 'Nim'));
     const sum = spectrum.segments.reduce((total, segment) => total + segment.share, 0);
     expect(sum).toBeCloseTo(1, 10);
-  });
-});
-
-describe('languageColorMap', () => {
-  it('maps only the named segments, leaving the tail to the neutral default', () => {
-    const spectrum = buildSpectrum(
-      withLanguages('Go', 'Go', 'Go', 'Rust', 'Rust', 'C', 'Zig', 'Elm'),
-    );
-    const map = languageColorMap(spectrum);
-    expect(map.get('Go')).toBe('var(--lang-1)');
-    expect(map.get('Rust')).toBe('var(--lang-2)');
-    expect(map.get('C')).toBe('var(--lang-3)');
-    expect(map.get('Zig')).toBeUndefined();
-    expect(map.has('Other')).toBe(false);
   });
 });

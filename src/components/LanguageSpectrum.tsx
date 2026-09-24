@@ -1,5 +1,6 @@
 import type { Spectrum } from '../lib/spectrum';
 import { exactNumber } from '../lib/format';
+import { UNKNOWN_LANGUAGE_COLOR, languageColor } from '../lib/languages';
 
 interface Props {
   spectrum: Spectrum;
@@ -20,20 +21,23 @@ const percent = (share: number) => `${Math.round(share * 100)}%`;
 export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }: Props) {
   if (spectrum.segments.length === 0) return null;
 
+  const colorOf = (segment: Spectrum['segments'][number]) =>
+    segment.isOther ? UNKNOWN_LANGUAGE_COLOR : languageColor(segment.label);
+
   return (
-    <section aria-labelledby="spectrum-heading" className="mt-6">
+    <section aria-labelledby="spectrum-heading">
       <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
         <h3 id="spectrum-heading" className="label">
           Language mix
         </h3>
-        <p className="font-mono text-[10px] text-ink-3">
-          {exactNumber(spectrum.classified)} of {exactNumber(spectrum.total)} repos classified
+        <p className="label text-muted">
+          {exactNumber(spectrum.classified)} of {exactNumber(spectrum.total)} classified
         </p>
       </div>
 
-      {/* 24px tall so the hit target clears the minimum; the 10px fill sits
+      {/* 24px tall so the hit target clears the minimum; the 8px fill sits
           centred inside it. A 2px gap separates segments instead of a border. */}
-      <div className="mt-2 flex h-6 w-full items-center gap-[2px]">
+      <div className="mt-2.5 flex h-6 w-full items-center gap-[2px]">
         {spectrum.segments.map((segment) => {
           const isActive = !segment.isOther && activeLanguage === segment.label;
           const noun = segment.count === 1 ? 'repo' : 'repos';
@@ -41,10 +45,10 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
 
           const fill = (
             <span
-              className="block h-[10px] w-full rounded-[1px] transition-[height,opacity] duration-200 group-hover:h-[14px]"
+              className="block h-2 w-full rounded-full transition-[height,opacity] duration-200 group-hover:h-3"
               style={{
-                background: segment.color,
-                opacity: activeLanguage && !isActive && !segment.isOther ? 0.4 : 1,
+                background: colorOf(segment),
+                opacity: activeLanguage && !isActive && !segment.isOther ? 0.35 : 1,
               }}
             />
           );
@@ -70,7 +74,7 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
               aria-pressed={isActive}
               aria-label={`${label}. Filter by ${segment.label}`}
               onClick={() => onSelectLanguage(isActive ? null : segment.label)}
-              className="group flex h-full cursor-pointer items-center rounded-[2px]"
+              className="group flex h-full cursor-pointer items-center rounded-full"
               style={{ flex: `${segment.share} 1 0`, minWidth: '6px' }}
             >
               {fill}
@@ -81,33 +85,27 @@ export function LanguageSpectrum({ spectrum, activeLanguage, onSelectLanguage }:
 
       {/* Every segment is also named here, so identity never rests on colour
           alone and the values stay readable without hovering anything. */}
-      <ul className="mt-2.5 flex flex-wrap gap-x-4 gap-y-1.5">
+      <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
         {spectrum.segments.map((segment) => {
           const isActive = !segment.isOther && activeLanguage === segment.label;
           const content = (
             <>
-              <span
-                aria-hidden="true"
-                className="size-2 shrink-0 rounded-[1px]"
-                style={{ background: segment.color }}
-              />
-              <span className="font-mono text-ink-2">{segment.label}</span>
-              <span className="font-mono text-[11px] tabular-nums text-ink-3">
-                {percent(segment.share)}
-              </span>
+              <span className="lang-dot" style={{ background: colorOf(segment) }} aria-hidden="true" />
+              <span className="text-fg">{segment.label}</span>
+              <span className="font-mono text-[11px] tabular-nums text-muted">{percent(segment.share)}</span>
             </>
           );
 
           return (
-            <li key={`legend-${segment.label}`} className="text-xs">
+            <li key={`legend-${segment.label}`} className="text-[13px]">
               {segment.isOther ? (
-                <span className="flex items-center gap-1.5">{content}</span>
+                <span className="flex min-h-8 items-center gap-2">{content}</span>
               ) : (
                 <button
                   type="button"
                   aria-pressed={isActive}
                   onClick={() => onSelectLanguage(isActive ? null : segment.label)}
-                  className={`-mx-1.5 flex cursor-pointer items-center gap-1.5 rounded-[2px] px-1.5 py-0.5 transition-colors hover:bg-inset ${
+                  className={`-mx-2 flex min-h-8 cursor-pointer items-center gap-2 rounded-full px-2 transition-colors hover:bg-white/5 ${
                     isActive ? 'bg-accent-soft' : ''
                   }`}
                 >

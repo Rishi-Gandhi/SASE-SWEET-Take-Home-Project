@@ -1,4 +1,5 @@
 import type { GitHubRepo } from '../types';
+import { clamp } from './motion';
 import { selectRepos } from './repos';
 
 /**
@@ -18,4 +19,15 @@ export function topRepos(repos: GitHubRepo[], count: number): GitHubRepo[] {
     sort: 'stars',
     sourcesOnly: false,
   }).slice(0, count);
+}
+
+/**
+ * How many cubes tall a repository's tower stands, 1–4, against the account's
+ * most-starred repository. Log-scaled on purpose: star counts are heavily
+ * skewed, and on a linear scale everything but the leader would be a single
+ * cube. The tower is a glance; the exact count is printed beside it.
+ */
+export function towerHeight(stars: number, maxStars: number): number {
+  if (maxStars <= 0) return 1;
+  return clamp(Math.round(1 + (3 * Math.log(stars + 1)) / Math.log(maxStars + 1)), 1, 4);
 }
