@@ -144,6 +144,10 @@ describe('RepoBox', () => {
     const alert = await screen.findByRole('alert');
     expect(within(alert).getByText(/no github user called/i)).toBeInTheDocument();
     expect(within(alert).queryByRole('button', { name: /try again/i })).not.toBeInTheDocument();
+    // The hero says it in one line, right under the field.
+    expect(screen.getByLabelText(/github username/i)).toHaveAccessibleDescription(
+      'No GitHub user named @nobodyhere.',
+    );
   });
 
   it('explains an exhausted rate limit and offers a retry', async () => {
@@ -166,6 +170,9 @@ describe('RepoBox', () => {
     expect(within(alert).getByText(/rate limit reached/i)).toBeInTheDocument();
     expect(within(alert).getByText(/in about 30 minutes/i)).toBeInTheDocument();
     expect(within(alert).getByRole('button', { name: /try again/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/github username/i)).toHaveAccessibleDescription(
+      /hourly limit for unauthenticated requests is used up\. it resets in about 30 minutes/i,
+    );
   });
 
   it('distinguishes an account with no public repos from a failure', async () => {
@@ -173,7 +180,10 @@ describe('RepoBox', () => {
     render(<App />);
     await search('barren-user');
 
-    expect(await screen.findByText(/no public repositories/i)).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: /no public repositories/i })).toBeInTheDocument();
+    expect(screen.getByLabelText(/github username/i)).toHaveAccessibleDescription(
+      /opened @octocat: no public repositories yet/i,
+    );
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
@@ -391,5 +401,54 @@ describe('RepoBox', () => {
     await waitFor(() => expect(screen.getByText(/sheet 02 — comparison/i)).toBeInTheDocument());
     // C is still the primary account's lead language, so it keeps its colour.
     expect(dotColour()).toBe(before);
+  });
+
+  it('narrates the search in the hint under the field', async () => {
+    stubGitHub();
+    render(<App />);
+    const field = screen.getByLabelText(/github username/i);
+    expect(field).toHaveAccessibleDescription(/try: torvalds/i);
+
+    // The stub answers every handle with the octocat fixture.
+    await search('hint-user');
+    await waitFor(() =>
+      expect(field).toHaveAccessibleDescription(/opened @octocat: 3 public repositories\. see them below/i),
+    );
+  });
+
+  it('asks for a username instead of clearing the view on an empty submit', async () => {
+    const fetchMock = stubGitHub();
+    render(<App />);
+    const user = userEvent.setup();
+
+    await user.click(screen.getByRole('button', { name: /^open box$/i }));
+
+    expect(screen.getByLabelText(/github username/i)).toHaveAccessibleDescription(
+      'Type a GitHub username first.',
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(window.location.search).toBe('');
+  });
+
+  it('treats a pasted "@handle" as the handle', async () => {
+    stubGitHub();
+    render(<App />);
+    await search('@at-user');
+
+    await waitFor(() => expect(window.location.search).toContain('u=at-user'));
+    expect(window.location.search).not.toContain('%40');
+  });
+
+  it('brings the results into view once an opened account is ready', async () => {
+    stubGitHub();
+    const scrolled: Element[] = [];
+    const spy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(function (this: Element) {
+      scrolled.push(this);
+    });
+    render(<App />);
+    await search('scroll-user');
+
+    await waitFor(() => expect(scrolled.map((element) => element.id)).toContain('repositories'));
+    spy.mockRestore();
   });
 });

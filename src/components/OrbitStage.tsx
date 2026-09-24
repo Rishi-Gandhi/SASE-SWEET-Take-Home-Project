@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import { useHeroLoop } from '../hooks/useHeroLoop';
 import { usePointerTilt } from '../hooks/usePointerTilt';
@@ -10,6 +10,8 @@ interface Props {
   /** Up to six, in ranking order; null entries draw as skeletons. */
   pills: ReadonlyArray<OrbitPillData | null>;
   loading: boolean;
+  /** Increments whenever the cube should shake: a handle that cannot exist. */
+  shakeKey: number;
   reducedMotion: boolean;
   /** The hero section: its visibility runs the loop, its pointer tilts the cube. */
   heroRef: RefObject<HTMLElement | null>;
@@ -20,7 +22,7 @@ interface Props {
  * cube, and six pills. Decorative — every fact the pills show is also in the
  * repository list — so the whole stage is hidden from assistive technology.
  */
-export function OrbitStage({ pills, loading, reducedMotion, heroRef }: Props) {
+export function OrbitStage({ pills, loading, shakeKey, reducedMotion, heroRef }: Props) {
   const stageRef = useRef<HTMLDivElement>(null);
   const frame = useHeroLoop(heroRef, {
     pillCount: pills.length,
@@ -30,11 +32,35 @@ export function OrbitStage({ pills, loading, reducedMotion, heroRef }: Props) {
   });
   usePointerTilt(heroRef, stageRef, !reducedMotion);
 
+  /*
+   * While a profile loads the rings spin four times faster. Changing a CSS
+   * animation's duration mid-spin recomputes its progress against the new
+   * duration and snaps every ring to a different angle, so the rate is changed
+   * on the running animations instead: same angle, new speed.
+   */
+  useEffect(() => {
+    const rings = stageRef.current?.querySelectorAll<HTMLElement>('.ring') ?? [];
+    for (const ring of rings) {
+      // getAnimations is missing from jsdom and older browsers; the rings
+      // then simply keep their normal speed.
+      for (const animation of ring.getAnimations?.() ?? []) {
+        animation.updatePlaybackRate(loading ? 4 : 1);
+      }
+    }
+  }, [loading]);
+
+  const [shaking, setShaking] = useState(false);
+  useEffect(() => {
+    if (shakeKey > 0 && !reducedMotion) setShaking(true);
+  }, [shakeKey, reducedMotion]);
+
   const className = [
     'stage',
     frame.lit && 'is-lit',
     frame.mapped && 'is-mapped',
     frame.active && 'is-active',
+    loading && 'is-loading',
+    shaking && 'is-shaking',
   ]
     .filter(Boolean)
     .join(' ');
@@ -46,7 +72,12 @@ export function OrbitStage({ pills, loading, reducedMotion, heroRef }: Props) {
       <div className="ring ring-1" />
       <div className="ring ring-2" />
       <div className="ring ring-3" />
-      <div className="stage-tilt">
+      <div
+        className="stage-tilt"
+        onAnimationEnd={(event) => {
+          if (event.animationName === 'cube-shake') setShaking(false);
+        }}
+      >
         <div className="stage-float">
           <Cube hero label="RepoBox" glyph="</>" />
         </div>

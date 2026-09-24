@@ -139,6 +139,47 @@ export default function App() {
   const stopComparing = useCallback(() => update({ vs: null }), [update]);
   const startComparing = useCallback((login: string) => update({ vs: login.trim() }), [update]);
 
+  /*
+   * Where the page goes once the profile being opened is ready. An explicit
+   * open — the hero form, a suggestion, the palette — glides down to the
+   * results; arriving on a shared link jumps straight there, because a link
+   * to a view should open on that view. Back/Forward set nothing, so the
+   * browser's own scroll position stands.
+   */
+  const scrollOnReady = useRef<ScrollBehavior | null>(state.username ? 'auto' : null);
+
+  const scrollToResults = useCallback(
+    (behavior: ScrollBehavior) => {
+      document
+        .getElementById('repositories')
+        ?.scrollIntoView({ behavior: reducedMotion ? 'auto' : behavior, block: 'start' });
+    },
+    [reducedMotion],
+  );
+
+  useEffect(() => {
+    if (profileState.status === 'error') scrollOnReady.current = null;
+    if (profileState.status !== 'ready' || !scrollOnReady.current) return;
+    const behavior = scrollOnReady.current;
+    scrollOnReady.current = null;
+    scrollToResults(behavior);
+  }, [profileState, scrollToResults]);
+
+  const openUser = useCallback(
+    (login: string) => {
+      // Re-opening the account already on screen loads nothing, so there is
+      // no "ready" to wait for: go now. setUsername still resets the filters.
+      if (profile?.user.login.toLowerCase() === login.toLowerCase()) {
+        setUsername(login);
+        scrollToResults('smooth');
+        return;
+      }
+      scrollOnReady.current = 'smooth';
+      setUsername(login);
+    },
+    [profile, setUsername, scrollToResults],
+  );
+
   const openPalette = useCallback(() => setPaletteOpen(true), []);
   const focusSearch = useCallback(() => {
     const input = searchInputRef.current;
@@ -173,7 +214,8 @@ export default function App() {
           recent={recent}
           reducedMotion={reducedMotion}
           inputRef={searchInputRef}
-          onOpen={setUsername}
+          onOpen={openUser}
+          onSeeResults={() => scrollToResults('smooth')}
         />
 
         <section id="repositories" className="repos" aria-label="Repositories">
@@ -336,7 +378,7 @@ export default function App() {
         sort={state.sort}
         sourcesOnly={state.sourcesOnly}
         hasFilters={hasFilters}
-        onPickUser={setUsername}
+        onPickUser={openUser}
         onCompare={startComparing}
         onStopCompare={stopComparing}
         onTogglePin={togglePin}

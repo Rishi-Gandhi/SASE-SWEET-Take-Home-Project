@@ -1,11 +1,11 @@
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { ProfileState } from '../hooks/useProfile';
 import { topRepos } from '../lib/highlights';
 import { compactNumber } from '../lib/format';
 import { OrbitStage } from './OrbitStage';
 import type { OrbitPillData } from './OrbitPill';
-import { IdleHint, SearchForm } from './SearchForm';
+import { SearchForm, SearchHint } from './SearchForm';
 import { ArrowOutIcon, BookIcon, CodeIcon, FilterIcon, SearchIcon, SortIcon, StarIcon } from './icons';
 
 /** Before anything is opened, the orbit shows what RepoBox does. */
@@ -44,11 +44,35 @@ interface Props {
   reducedMotion: boolean;
   inputRef: RefObject<HTMLInputElement | null>;
   onOpen: (username: string) => void;
+  onSeeResults: () => void;
 }
 
-export function Hero({ username, profileState, pinned, recent, reducedMotion, inputRef, onOpen }: Props) {
+export function Hero({
+  username,
+  profileState,
+  pinned,
+  recent,
+  reducedMotion,
+  inputRef,
+  onOpen,
+  onSeeResults,
+}: Props) {
   const heroRef = useRef<HTMLElement>(null);
   const pills = useMemo(() => pillsFor(profileState), [profileState]);
+
+  // The cube shakes its head at a handle that cannot exist — one GitHub does
+  // not know, or one its rules forbid — but not at a spent quota or a dropped
+  // connection, which are not the viewer's mistake.
+  const [shakeKey, setShakeKey] = useState(0);
+  const shake = () => setShakeKey((n) => n + 1);
+  useEffect(() => {
+    if (
+      profileState.status === 'error' &&
+      (profileState.error.kind === 'not-found' || profileState.error.kind === 'invalid-username')
+    ) {
+      setShakeKey((n) => n + 1);
+    }
+  }, [profileState]);
 
   return (
     <section ref={heroRef} id="hero" className="hero" aria-labelledby="hero-title">
@@ -72,6 +96,7 @@ export function Hero({ username, profileState, pinned, recent, reducedMotion, in
       <OrbitStage
         pills={pills}
         loading={profileState.status === 'loading'}
+        shakeKey={shakeKey}
         reducedMotion={reducedMotion}
         heroRef={heroRef}
       />
@@ -80,10 +105,15 @@ export function Hero({ username, profileState, pinned, recent, reducedMotion, in
         username={username}
         inputRef={inputRef}
         onOpen={onOpen}
+        onEmpty={shake}
         hint={
-          profileState.status === 'idle' ? (
-            <IdleHint pinned={pinned} recent={recent} onPick={onOpen} />
-          ) : null
+          <SearchHint
+            state={profileState}
+            pinned={pinned}
+            recent={recent}
+            onPick={onOpen}
+            onSeeResults={onSeeResults}
+          />
         }
       />
 
