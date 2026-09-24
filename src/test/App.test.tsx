@@ -139,9 +139,22 @@ describe('RepoBox', () => {
     const filter = await screen.findByLabelText(/filter repositories/i);
     await user.type(filter, 'zzzzz');
 
-    expect(await screen.findByText(/nothing matches those filters/i)).toBeInTheDocument();
+    expect(await screen.findByText('No repositories match “zzzzz”.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /clear filters/i }));
     await waitFor(() => expect(listed()).toEqual(['kernel', 'toolbox', 'dotfiles']));
+  });
+
+  it('names the filters that emptied the list', async () => {
+    stubGitHub();
+    render(<App />);
+    const user = await search('named-empty-user');
+    await findListed();
+
+    const chips = screen.getByRole('group', { name: /filter by language/i });
+    await user.click(within(chips).getByRole('button', { name: 'Rust' }));
+    await user.type(screen.getByLabelText(/filter repositories/i), 'kernel');
+
+    expect(await screen.findByText('No repositories match “kernel” in Rust.')).toBeInTheDocument();
   });
 
   it('scopes the list when a language segment is clicked', async () => {
@@ -376,6 +389,26 @@ describe('RepoBox', () => {
 
     await user.click(screen.getByRole('button', { name: /remove topic filter: cli/i }));
     expect(listed()).toEqual(['kernel', 'toolbox']);
+  });
+
+  it('finds a topic from the command palette', async () => {
+    stubGitHub({
+      repos: [
+        makeRepo({ name: 'kernel', stargazers_count: 900, language: 'C', topics: ['os'] }),
+        makeRepo({ name: 'toolbox', stargazers_count: 120, language: 'Rust', topics: ['cli'] }),
+      ],
+    });
+    render(<App />);
+    const user = await search('palette-topic-user');
+    await findListed();
+
+    await user.keyboard('{Meta>}k{/Meta}');
+    const palette = await screen.findByRole('dialog', { name: /command palette/i });
+    await user.keyboard('cli');
+    await user.click(within(palette).getByRole('option', { name: /filter by topic: cli/i }));
+
+    await waitFor(() => expect(listed()).toEqual(['toolbox']));
+    expect(screen.getByRole('button', { name: /remove topic filter: cli/i })).toBeInTheDocument();
   });
 
   it('shows the remaining API budget once GitHub reports it', async () => {

@@ -1012,6 +1012,40 @@
     cursor: not-allowed;
   }
 
+  /* ---------- empty, error and idle panels ---------- */
+
+  .empty-panel {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 24px;
+    border: 1px solid var(--panel-line);
+    border-radius: var(--radius);
+    background: var(--panel);
+    text-align: center;
+  }
+
+  .empty-panel.is-dashed {
+    border-style: dashed;
+    background: transparent;
+  }
+
+  .empty-panel.is-error {
+    border-color: color-mix(in oklab, var(--critical) 45%, transparent);
+  }
+
+  .empty-panel .label,
+  .empty-panel h3 {
+    margin: 0;
+  }
+
+  /* Room for the isometric cube's projected corners above and below. */
+  .empty-cube {
+    display: grid;
+    place-items: center;
+    height: 60px;
+  }
+
   /* ---------- pills: chips, toggles, and small links ---------- */
 
   .chip {

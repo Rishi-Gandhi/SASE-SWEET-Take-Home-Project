@@ -25,11 +25,15 @@ interface Props {
   sort: SortKey;
   sourcesOnly: boolean;
   hasFilters: boolean;
+  /** Topics across the current repositories, most-used first. */
+  topics: Array<{ topic: string; count: number }>;
+  activeTopic: string | null;
   onPickUser: (login: string) => void;
   onCompare: (login: string) => void;
   onStopCompare: () => void;
   onTogglePin: (login: string) => void;
   onSort: (sort: SortKey) => void;
+  onTopic: (topic: string | null) => void;
   onToggleForks: () => void;
   onClearFilters: () => void;
 }
@@ -110,6 +114,23 @@ export function CommandPalette(props: Props) {
         hint: `★ ${compactNumber(repo.stargazers_count)}${repo.language ? ` · ${repo.language}` : ''}`,
         run: () => window.open(repo.html_url, '_blank', 'noopener,noreferrer'),
       });
+    }
+
+    // Topics have no control of their own on the page — they are picked from
+    // the cards — so typing one here is how an off-screen topic is found.
+    if (needle) {
+      const matchingTopics = props.topics
+        .filter(({ topic }) => topic.includes(needle) && topic !== props.activeTopic)
+        .slice(0, 5);
+      for (const { topic, count } of matchingTopics) {
+        out.push({
+          id: `topic-${topic}`,
+          group: 'Topics',
+          label: `Filter by topic: ${topic}`,
+          hint: `${count} ${count === 1 ? 'repo' : 'repos'}`,
+          run: () => props.onTopic(topic),
+        });
+      }
     }
 
     const actions: Command[] = [
@@ -224,7 +245,7 @@ export function CommandPalette(props: Props) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-page/70 px-4 pt-[12vh] backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/70 px-4 pt-[12vh] backdrop-blur-sm"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -233,11 +254,11 @@ export function CommandPalette(props: Props) {
         role="dialog"
         aria-modal="true"
         aria-label="Command palette"
-        className="sheet deck-rise w-full max-w-xl overflow-hidden shadow-2xl"
+        className="panel enter w-full max-w-xl overflow-hidden"
         onKeyDown={onKeyDown}
       >
-        <div className="flex items-center gap-2.5 border-b border-line px-3.5 py-3">
-          <SearchIcon className="size-4 shrink-0 text-ink-3" />
+        <div className="flex items-center gap-2.5 border-b border-panel-line px-4 py-3.5">
+          <SearchIcon className="size-4 shrink-0 text-muted" />
           <label htmlFor="cmd-input" className="sr-only">
             Search users, repositories, and commands
           </label>
@@ -253,14 +274,14 @@ export function CommandPalette(props: Props) {
             aria-expanded="true"
             aria-controls="cmd-list"
             aria-activedescendant={commands[active] ? `cmd-${commands[active].id}` : undefined}
-            className="w-full bg-transparent font-mono text-sm text-ink outline-none placeholder:font-sans placeholder:text-ink-3"
+            className="w-full bg-transparent text-[15px] text-fg outline-none placeholder:text-muted"
           />
-          <kbd className="label rounded-[2px] border border-line px-1.5 py-0.5">esc</kbd>
+          <kbd className="label rounded-full border border-panel-line px-2 py-0.5 text-muted">esc</kbd>
         </div>
 
-        <ul id="cmd-list" role="listbox" ref={listRef} className="max-h-[52vh] overflow-y-auto py-1.5">
+        <ul id="cmd-list" role="listbox" ref={listRef} className="max-h-[52vh] overflow-y-auto py-2">
           {commands.length === 0 && (
-            <li className="px-3.5 py-6 text-center text-[13px] text-ink-3">
+            <li className="px-4 py-6 text-center text-[13px] text-muted">
               Nothing matches “{query}”.
             </li>
           )}
@@ -271,7 +292,7 @@ export function CommandPalette(props: Props) {
 
             return (
               <li key={command.id}>
-                {showGroup && <p className="label px-3.5 pb-1 pt-2.5">{command.group}</p>}
+                {showGroup && <p className="label px-4 pb-1 pt-3 text-muted">{command.group}</p>}
                 <div
                   id={`cmd-${command.id}`}
                   role="option"
@@ -279,13 +300,13 @@ export function CommandPalette(props: Props) {
                   data-index={index}
                   onMouseMove={() => setActive(index)}
                   onClick={() => run(command)}
-                  className={`mx-1.5 flex cursor-pointer items-center justify-between gap-3 rounded-[2px] px-2 py-1.5 text-[13px] ${
-                    index === active ? 'bg-accent-soft text-ink' : 'text-ink-2'
+                  className={`mx-2 flex min-h-9 cursor-pointer items-center justify-between gap-3 rounded-full px-3 text-[14px] ${
+                    index === active ? 'bg-accent-soft text-fg' : 'text-fg/85'
                   }`}
                 >
-                  <span className="truncate font-mono">{command.label}</span>
+                  <span className="truncate">{command.label}</span>
                   {command.hint && (
-                    <span className="shrink-0 font-mono text-[10px] text-ink-3">{command.hint}</span>
+                    <span className="shrink-0 font-mono text-[11px] text-muted">{command.hint}</span>
                   )}
                 </div>
               </li>

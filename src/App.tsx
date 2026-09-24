@@ -20,7 +20,7 @@ import { useScrolledPast } from './hooks/useScrolledPast';
 import { useActiveSection } from './hooks/useActiveSection';
 import { useGlobalShortcuts } from './hooks/useGlobalShortcuts';
 import { usePrefersReducedMotion } from './hooks/usePrefersReducedMotion';
-import { languageOptions, selectRepos, totalStars } from './lib/repos';
+import { languageOptions, selectRepos, topicOptions, totalStars } from './lib/repos';
 import { buildSpectrum } from './lib/spectrum';
 import { buildActivity } from './lib/activity';
 import { compareProfiles, mergeRepos } from './lib/compare';
@@ -73,6 +73,7 @@ export default function App() {
   }, [profile, vsProfile, comparing]);
 
   const languages = useMemo(() => languageOptions(pool), [pool]);
+  const topics = useMemo(() => topicOptions(pool), [pool]);
 
   const comparison = useMemo(
     () =>
@@ -303,7 +304,13 @@ export default function App() {
                       />
 
                       {visible.length === 0 ? (
-                        <NoMatchesState onClear={clearFilters} />
+                        <NoMatchesState
+                          search={state.search}
+                          language={state.language}
+                          topic={state.topic}
+                          sourcesOnly={state.sourcesOnly}
+                          onClear={clearFilters}
+                        />
                       ) : (
                         <RepoList
                           repos={visible}
@@ -354,11 +361,14 @@ export default function App() {
         sort={state.sort}
         sourcesOnly={state.sourcesOnly}
         hasFilters={hasFilters}
+        topics={topics}
+        activeTopic={state.topic}
         onPickUser={openUser}
         onCompare={startComparing}
         onStopCompare={stopComparing}
         onTogglePin={togglePin}
         onSort={(sort) => update({ sort })}
+        onTopic={(topic) => update({ topic })}
         onToggleForks={() => update({ sourcesOnly: !state.sourcesOnly })}
         onClearFilters={clearFilters}
       />

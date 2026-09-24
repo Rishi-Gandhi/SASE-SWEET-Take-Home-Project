@@ -12,25 +12,6 @@ export function StarIcon({ className = '' }: IconProps) {
   );
 }
 
-export function ForkIcon({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    >
-      <circle cx="4" cy="3.2" r="1.8" />
-      <circle cx="12" cy="3.2" r="1.8" />
-      <circle cx="8" cy="12.8" r="1.8" />
-      <path d="M4 5v1.4A2.6 2.6 0 006.6 9h2.8A2.6 2.6 0 0012 6.4V5M8 9v2" />
-    </svg>
-  );
-}
-
 export function SearchIcon({ className = '' }: IconProps) {
   return (
     <svg
@@ -78,23 +59,6 @@ export function AlertIcon({ className = '' }: IconProps) {
     >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7.6v5M12 16.2h.01" />
-    </svg>
-  );
-}
-
-export function DeckMark({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 32 32"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinejoin="round"
-    >
-      <path d="M16 4l10 6v12l-10 6-10-6V10z" />
-      <path d="M16 11l5 3v6l-5 3-5-3v-6z" opacity="0.55" />
     </svg>
   );
 }
