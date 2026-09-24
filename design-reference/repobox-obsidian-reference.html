@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!--
+  RepoBox · Obsidian design reference
+  ------------------------------------------------------------------
+  A working, single-file prototype of the chosen "Obsidian" direction.
+  It exists so Claude Code can copy exact values (colors, sizes, timings,
+  easing, keyframes) and behaviors. It is NOT production code:
+  - It uses hard-coded SAMPLE profiles (orbit-labs, pixelsmith).
+    The real app must use the repo's existing GitHub API logic.
+  - Repo links show a toast instead of navigating.
+  Design based on "Web Design for an Enterprise ERP Platform part 2" by Zajno (Dribbble).
+-->
+<title>RepoBox · Obsidian design reference</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* ============ design tokens (Obsidian) ============ */
+.rb{
+  --bg:#020202; --bg2:#070708; --fg:#F2F3F5; --muted:#8A8F98; --faint:rgba(255,255,255,.08); --grid-w:1px;
+  --accent:#2E4FD2; --accent-2:#6A95EC; --on-accent:#FFFFFF;
+  --panel:#0C0D10; --panel-line:rgba(255,255,255,.09); --panel-hover:rgba(106,149,236,.55);
+  --pill-bg:rgba(22,23,27,.92); --pill-line:rgba(255,255,255,.14); --pill-fg:#E6E8EC; --hot-bg:#F2F3F5; --hot-fg:#0B0B0C;
+  --radius:14px; --pill-radius:999px; --card-shadow:none;
+  --fd:'Inter Tight','Helvetica Neue',Arial,sans-serif; --fb:'Inter',system-ui,sans-serif; --fm:'IBM Plex Mono',ui-monospace,Menlo,monospace;
+  --dw:500; --dt:-.025em; --dtt:none; --h2size:clamp(32px,4.4vw,56px);
+  --edge:rgba(190,200,230,.34); --edge-w:1px;
+  --c-top:rgba(44,48,64,.92); --c-left:rgba(20,22,32,.94); --c-front:rgba(10,11,18,.96);
+  --l-top:linear-gradient(140deg,rgba(170,195,255,.9),rgba(96,128,245,.85)); --l-left:linear-gradient(160deg,rgba(80,112,236,.82),rgba(28,48,190,.86)); --l-front:linear-gradient(160deg,rgba(58,90,226,.84),rgba(14,29,156,.9)); --l-edge:rgba(175,198,255,.85);
+  --a-top:#7E9BF2; --a-left:#3656D8; --a-front:#1E36B4;
+  --cube-label:#FFFFFF; --core:1;
+  --ring:rgba(255,255,255,.74); --ring-w:1px; --ring-style:solid; --ring-dot:#FFFFFF;
+  --glow:rgba(46,79,210,.55);
+  --input-bg:rgba(255,255,255,.04); --input-line:rgba(255,255,255,.16);
+  --lang-dot-ring:rgba(255,255,255,.2);
+}
+/* ============ base ============ */
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html{scroll-behavior:auto}
+body{margin:0;background:#020202}
+.rb{background:var(--bg);color:var(--fg);font:15px/1.55 var(--fb);-webkit-font-smoothing:antialiased;min-height:100vh;position:relative;overflow-x:clip;transition:background-color .4s}
+.rb button{font:inherit;color:inherit}
+.rb :focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+.lbl{font:500 11px/1.45 var(--fm);letter-spacing:.08em;text-transform:uppercase;color:var(--fg)}
+.lbl em{display:block;font-style:normal;color:var(--muted)}
+.muted{color:var(--muted)}
+.wrap{max-width:1200px;margin:0 auto;padding-inline:24px}
+
+/* top bar */
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:30;display:grid;grid-template-columns:auto 1fr auto;gap:28px;align-items:center;height:48px;padding-inline:24px;background:color-mix(in srgb,var(--bg) 86%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:var(--grid-w) solid var(--faint)}
+.bar .brand{display:flex;align-items:center;gap:10px}
+.bar .glyph{width:14px;height:14px;border:1.5px solid var(--fg);transform:rotate(45deg) scale(.8);position:relative}
+.bar .glyph::after{content:"";position:absolute;inset:3px;background:var(--accent)}
+.bar .crumb{text-align:right;color:var(--muted)}
+.bar .crumb b{color:var(--fg);font-weight:500}
+@media (max-width:640px){.bar{grid-template-columns:auto 1fr;gap:12px}.bar .mid{display:none}}
+
+/* ============ hero ============ */
+.hero{position:relative;min-height:720px;display:flex;flex-direction:column;align-items:center;padding:34px 24px 110px;overflow:hidden;isolation:isolate}
+.fx{position:absolute;inset:0;pointer-events:none;z-index:-1}
+.fx i{position:absolute;display:block}
+.gridlines{position:absolute;inset:0;pointer-events:none;z-index:0}
+.gridlines::before{content:"";position:absolute;left:0;right:0;top:92px;bottom:88px;border-top:var(--grid-w) solid var(--faint);border-bottom:var(--grid-w) solid var(--faint)}
+.gridlines::after{content:"";position:absolute;top:0;bottom:0;left:max(24px,9%);right:max(24px,9%);border-left:var(--grid-w) solid var(--faint);border-right:var(--grid-w) solid var(--faint)}
+.hero-top{position:absolute;left:0;right:0;top:26px;display:grid;grid-template-columns:max(24px,9%) 1fr 1fr max(24px,9%);gap:0;padding:0;z-index:2}
+.hero-top>*{padding-inline:14px}
+.hero-top .c1{grid-column:2}
+.hero-top .c2{grid-column:3;max-width:360px}
+.corner{position:absolute;bottom:40px;z-index:2}
+.corner.l{left:calc(max(24px,9%) + 14px)}
+.corner.r{right:calc(max(24px,9%) + 14px);text-align:right}
+@media (max-width:760px){.hero-top{grid-template-columns:16px 1fr 16px}.hero-top .c2{display:none}.corner{display:none}}
+
+.stage{--tx:0;--ty:0;--s:clamp(88px,11.5vw,124px);position:relative;width:min(860px,100%);height:clamp(400px,48vw,500px);margin-top:70px;perspective:1300px;display:grid;place-items:center;z-index:1}
+.stage>*{grid-area:1/1}
+.stage .axis{width:0;height:96%;border-left:1px dashed var(--faint)}
+.glow{width:calc(var(--s)*3.2);aspect-ratio:1;border-radius:50%;background:radial-gradient(closest-side,var(--glow),transparent);filter:blur(10px);opacity:.25;transition:opacity 1s}
+.stage.lit .glow{opacity:1}
+.ring{position:relative;border:var(--ring-w) var(--ring-style) var(--ring);border-radius:50%;translate:calc(var(--tx)*-12px) calc(var(--ty)*-8px);transition:translate .4s ease-out,opacity .6s}
+.ring::after{content:"";position:absolute;width:9px;height:9px;border-radius:50%;background:var(--ring-dot);top:-5px;left:calc(50% - 4.5px);box-shadow:0 0 12px var(--ring-dot)}
+.ring.r1{width:27%;height:94%;animation:spin1 46s linear infinite}
+.ring.r2{width:74%;height:34%;animation:spin2 58s linear infinite}
+.ring.r3{width:66%;height:28%;animation:spin3 38s linear infinite}
+.ring.r3::after{top:auto;bottom:-5px}
+@keyframes spin1{from{transform:rotate(-8deg)}to{transform:rotate(352deg)}}
+@keyframes spin2{from{transform:rotate(-17deg)}to{transform:rotate(343deg)}}
+@keyframes spin3{from{transform:rotate(386deg)}to{transform:rotate(26deg)}}
+.tilt{transform-style:preserve-3d;transform:rotateX(calc(var(--ty)*-18deg)) rotateY(calc(var(--tx)*28deg));transition:transform .35s ease-out}
+.hero-cube-wrap{transform-style:preserve-3d;animation:float 7s ease-in-out infinite alternate}
+@keyframes float{from{transform:translateY(8px) rotateX(-24deg) rotateY(36deg)}to{transform:translateY(-8px) rotateX(-28deg) rotateY(48deg)}}
+
+/* cube */
+.cube{--h:calc(var(--s)/2);position:relative;width:var(--s);height:var(--s);transform-style:preserve-3d}
+.cube .f{position:absolute;inset:0;border:var(--edge-w) solid var(--edge);background:var(--c-front);transition:background .9s ease,border-color .9s ease,box-shadow .9s}
+.cube .f-front{transform:translateZ(var(--h));background:var(--c-front)}
+.cube .f-back{transform:rotateY(180deg) translateZ(var(--h));background:var(--c-front)}
+.cube .f-right{transform:rotateY(90deg) translateZ(var(--h));background:var(--c-left)}
+.cube .f-left{transform:rotateY(-90deg) translateZ(var(--h));background:var(--c-left)}
+.cube .f-top{transform:rotateX(90deg) translateZ(var(--h));background:var(--c-top)}
+.cube .f-bottom{transform:rotateX(-90deg) translateZ(var(--h));background:var(--c-left)}
+.cube .cl{position:absolute;inset:0;display:grid;place-items:center;transform:translateZ(calc(var(--h) + 1px));-webkit-backface-visibility:hidden;backface-visibility:hidden;font:700 calc(var(--s)*.155)/1 var(--fd);letter-spacing:-.01em;color:var(--cube-label);pointer-events:none}
+.cube .ci{position:absolute;inset:0;display:grid;place-items:center;transform:rotateX(90deg) translateZ(calc(var(--h) + 1px));-webkit-backface-visibility:hidden;backface-visibility:hidden;font:700 calc(var(--s)*.13)/1 var(--fm);color:var(--cube-label);opacity:.85;pointer-events:none}
+.hero-cube::before{content:"";position:absolute;inset:16%;border-radius:50%;background:radial-gradient(closest-side,#fff,rgba(255,255,255,.4) 55%,transparent);filter:blur(6px);opacity:0;transition:opacity 1s}
+.stage.lit .hero-cube::before{opacity:var(--core)}
+.stage.lit .hero-cube .f{border-color:var(--l-edge)}
+.stage.lit .hero-cube .f-front,.stage.lit .hero-cube .f-back{background:var(--l-front)}
+.stage.lit .hero-cube .f-left,.stage.lit .hero-cube .f-right,.stage.lit .hero-cube .f-bottom{background:var(--l-left)}
+.stage.lit .hero-cube .f-top{background:var(--l-top)}
+.cube.acc .f-front,.cube.acc .f-back{background:var(--a-front)}
+.cube.acc .f-left,.cube.acc .f-right,.cube.acc .f-bottom{background:var(--a-left)}
+.cube.acc .f-top{background:var(--a-top)}
+.cube.acc .f{border-color:var(--l-edge)}
+
+/* pills */
+.pills{position:absolute;inset:0;z-index:3;pointer-events:none}
+.pill{position:absolute;left:var(--x);top:var(--y);display:inline-flex;align-items:center;gap:8px;padding:6px 12px 6px 6px;border-radius:var(--pill-radius);background:var(--pill-bg);border:1px solid var(--pill-line);color:var(--pill-fg);font:500 13px/1 var(--fb);white-space:nowrap;box-shadow:var(--card-shadow);transform:translate(-50%,-50%) scale(.82);translate:calc(var(--tx)*9px) calc(var(--ty)*6px);opacity:0;transition:opacity .45s ease,transform .5s cubic-bezier(.3,1.4,.5,1),background .3s,color .3s,translate .4s ease-out;transition-delay:calc((6 - var(--i)) * 70ms)}
+.stage.map .pill{opacity:1;transform:translate(-50%,-50%) scale(1);transition-delay:calc(var(--i) * 330ms)}
+.pill .pi{width:22px;height:22px;border-radius:var(--pill-radius);display:grid;place-items:center;border:1px solid var(--pill-line);color:var(--muted);transition:background .4s,color .4s,border-color .4s}
+.pill .pi svg{width:12px;height:12px}
+.pill .ps{font:500 11px/1 var(--fm);color:var(--muted);letter-spacing:.02em}
+.stage.active .pill .pi{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
+.pill.hot{background:var(--hot-bg);color:var(--hot-fg)}
+.pill.hot .ps{color:inherit;opacity:.7}
+@media (max-width:640px){.pill .ps{display:none}.pill{font-size:11.5px;padding:4px 9px 4px 4px}.pill .pi{width:18px;height:18px}}
+
+/* search */
+.search{position:relative;z-index:4;display:flex;flex-direction:column;align-items:center;gap:10px;margin-top:10px;width:min(520px,100%)}
+.search-row{display:flex;align-items:stretch;width:100%;border:1px solid var(--input-line);background:var(--input-bg);border-radius:var(--pill-radius);padding:5px;gap:6px;box-shadow:var(--card-shadow)}
+.search-row .at{display:grid;place-items:center;padding-left:12px;font:500 15px/1 var(--fm);color:var(--muted)}
+.search-row input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:500 16px/1 var(--fb);padding:10px 4px;outline:none}
+.search-row input::placeholder{color:var(--muted)}
+.search-row:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.btn{appearance:none;border:1px solid transparent;background:var(--accent);color:var(--on-accent);font:600 14px/1 var(--fb);padding:0 18px;min-height:42px;border-radius:var(--pill-radius);cursor:pointer;display:inline-flex;align-items:center;gap:8px;white-space:nowrap;transition:transform .15s,filter .15s,background .2s}
+.btn:hover{filter:brightness(1.1)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--fg);border-color:var(--panel-line)}
+.hint{margin:0;font-size:13px;color:var(--muted);text-align:center;min-height:20px}
+.hint button{appearance:none;background:none;border:0;padding:0;color:var(--fg);text-decoration:underline;text-underline-offset:3px;cursor:pointer;font:inherit}
+.hint a{color:var(--fg)}
+
+/* ============ how ============ */
+.how{position:relative;height:280vh;border-top:var(--grid-w) solid var(--faint);background:var(--bg)}
+.how-sticky{position:sticky;top:calc(48px + env(safe-area-inset-top,0px));height:calc(100vh - 48px);min-height:560px;display:flex;flex-direction:column;align-items:center;overflow:hidden}
+.how .gridlines::before{top:64px;bottom:64px}
+.h2{margin:0;font:var(--dw) var(--h2size)/1.02 var(--fd);letter-spacing:var(--dt);text-transform:var(--dtt);text-align:center;text-wrap:balance}
+.how .h2{margin-top:clamp(40px,8vh,90px);position:relative;z-index:2}
+.how-stage{--ms:clamp(58px,7vw,84px);position:relative;flex:1;width:100%;max-width:900px;z-index:1}
+.how-stage .axis{position:absolute;left:50%;top:6%;bottom:6%;border-left:1px dashed var(--faint)}
+.how-stage .axis::before{content:"";position:absolute;top:-10px;left:-8px;width:16px;height:16px;border:1px solid var(--muted);transform:rotate(45deg)}
+.step{--x:0px;--y:0px;position:absolute;left:50%;top:50%;width:0;height:0}
+.step .guide{position:absolute;border:1px dashed var(--muted);opacity:var(--go,0);pointer-events:none}
+.step .mini{position:absolute;left:0;top:0;transform:translate(calc(var(--x) - 50%),calc(var(--y) - 50%));--s:var(--ms)}
+.step .mini .cube{transform:rotateX(-35.26deg) rotateY(45deg)}
+.step .tag{position:absolute;left:0;top:0;transform:translate(calc(var(--x) + var(--ms)*.78),calc(var(--y) - 8px));display:flex;align-items:flex-start;gap:8px;white-space:nowrap;transition:opacity .3s}
+.step .tag b{font:600 10px/1 var(--fm);padding:3px 5px;background:var(--fg);color:var(--bg);border-radius:calc(var(--radius) / 4)}
+.step .tag span{display:flex;flex-direction:column;gap:3px;font:600 13px/1.1 var(--fb)}
+.step .tag small{font:400 12px/1.3 var(--fb);color:var(--muted)}
+.step.on .tag b{background:var(--accent);color:var(--on-accent)}
+.step.on .cube .f-top{background:var(--a-top)}
+.step.on .cube .f{border-color:var(--l-edge)}
+.how-foot{position:relative;z-index:2;width:100%;display:flex;justify-content:space-between;padding:0 max(24px,9%) 30px;gap:16px}
+.how-foot .lbl{max-width:420px}
+@media (max-width:640px){.step .tag small{display:none}.how{height:240vh}}
+
+/* ============ repos ============ */
+.repos{position:relative;border-top:var(--grid-w) solid var(--faint);background:var(--bg2);padding-block:64px 150px}
+.profile{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding-bottom:28px;border-bottom:var(--grid-w) solid var(--faint)}
+.avatar{--s:46px;width:64px;height:64px;display:grid;place-items:center;border:1px solid var(--panel-line);border-radius:var(--radius);background:var(--panel);font:700 24px/1 var(--fd);color:var(--fg);box-shadow:var(--card-shadow)}
+.profile h2{margin:0;font:var(--dw) clamp(24px,3vw,34px)/1.1 var(--fd);letter-spacing:var(--dt);text-transform:var(--dtt)}
+.profile .meta{font-size:14px;color:var(--muted);margin-top:4px}
+.badge{margin-left:auto;display:inline-flex;align-items:center;gap:6px;font:500 11px/1 var(--fm);letter-spacing:.06em;text-transform:uppercase;padding:7px 10px;border:1px dashed var(--muted);border-radius:var(--pill-radius);color:var(--muted)}
+.sec-h{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin:40px 0 18px}
+.sec-h h3{margin:6px 0 0;font:var(--dw) clamp(22px,2.6vw,30px)/1.1 var(--fd);letter-spacing:var(--dt);text-transform:var(--dtt)}
+.arrows{display:flex;gap:8px}
+.arrow{appearance:none;width:44px;height:44px;border-radius:var(--pill-radius);border:1px solid var(--panel-line);background:var(--panel);color:var(--fg);cursor:pointer;display:grid;place-items:center;box-shadow:var(--card-shadow)}
+.arrow:hover{border-color:var(--panel-hover)}
+.arrow svg{width:16px;height:16px}
+
+/* carousel */
+.track{--cw:min(430px,80vw);display:flex;gap:22px;overflow-x:auto;scroll-snap-type:x mandatory;padding:10px calc(50% - var(--cw)/2) 22px;scrollbar-width:none;margin-inline:calc(50% - 50vw);padding-inline:calc(50vw - var(--cw)/2)}
+.track::-webkit-scrollbar{display:none}
+.fcard{flex:none;width:var(--cw);aspect-ratio:1/1.02;scroll-snap-align:center;position:relative;display:flex;flex-direction:column;padding:24px;border:1px solid var(--panel-line);border-radius:var(--radius);background:var(--panel);box-shadow:var(--card-shadow);opacity:.38;transition:opacity .5s,transform .5s,border-color .3s;overflow:hidden}
+.fcard.active{opacity:1}
+.fcard:hover{border-color:var(--panel-hover)}
+.fcard h4{margin:0;font:var(--dw) 22px/1.15 var(--fd);letter-spacing:var(--dt);text-transform:var(--dtt);overflow-wrap:anywhere}
+.fcard p{margin:8px 0 0;font-size:14px;color:var(--muted);max-width:34ch}
+.fcard .foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;position:relative;z-index:2}
+.iso{position:relative;flex:1;min-height:150px}
+.iso .floor{position:absolute;left:50%;top:70%;width:190px;height:190px;transform:translate(-50%,-50%) rotateX(54.74deg) rotateZ(45deg);background-image:linear-gradient(var(--faint) 1px,transparent 1px),linear-gradient(90deg,var(--faint) 1px,transparent 1px);background-size:26px 26px;border:1px solid var(--faint)}
+.iso .mini{position:absolute;left:50%;top:66%;--s:40px;transform:translate(-50%,calc(-50% - var(--j) * var(--s) * .816));z-index:calc(10 + var(--j))}
+.iso .mini .cube{transform:rotateX(-35.26deg) rotateY(45deg)}
+.iso .spill{position:absolute;right:4px;top:10px;z-index:30;display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--pill-radius);background:var(--pill-bg);border:1px solid var(--pill-line);color:var(--pill-fg);font:500 12px/1 var(--fm);box-shadow:var(--card-shadow)}
+.fcard.active .iso .mini{animation:rise .7s cubic-bezier(.3,1.3,.5,1) both;animation-delay:calc(var(--j) * 90ms)}
+@keyframes rise{from{opacity:0;translate:0 -30px}to{opacity:1;translate:0 0}}
+
+/* controls + list */
+.controls{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin:34px 0 14px}
+.filter{flex:1 1 260px;display:flex;align-items:center;gap:8px;border:1px solid var(--input-line);background:var(--input-bg);border-radius:var(--pill-radius);padding:0 14px;min-height:44px;box-shadow:var(--card-shadow)}
+.filter:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.filter svg{width:16px;height:16px;color:var(--muted);flex:none}
+.filter input{flex:1;min-width:0;border:0;background:transparent;color:var(--fg);font:15px/1 var(--fb);outline:none;padding:12px 0}
+.filter input::placeholder{color:var(--muted)}
+.seg{display:inline-flex;border:1px solid var(--input-line);border-radius:var(--pill-radius);padding:3px;gap:3px;background:var(--input-bg);box-shadow:var(--card-shadow)}
+.seg button{appearance:none;border:0;background:transparent;min-height:36px;padding:0 14px;border-radius:var(--pill-radius);font:600 13px/1 var(--fb);color:var(--muted);cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--fg);color:var(--bg)}
+.langs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:18px}
+.chip{appearance:none;display:inline-flex;align-items:center;gap:7px;min-height:32px;padding:0 12px;border-radius:var(--pill-radius);border:1px solid var(--panel-line);background:transparent;color:var(--muted);font:500 13px/1 var(--fb);cursor:pointer}
+.chip:hover{color:var(--fg);border-color:var(--panel-hover)}
+.chip[aria-pressed="true"]{background:var(--fg);border-color:var(--fg);color:var(--bg)}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;box-shadow:0 0 0 1px var(--lang-dot-ring)}
+.count{font:500 12px/1 var(--fm);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);margin:0 0 14px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px}
+.repo{display:flex;flex-direction:column;gap:10px;padding:18px 18px 16px;border:1px solid var(--panel-line);border-radius:var(--radius);background:var(--panel);box-shadow:var(--card-shadow);transition:border-color .2s,transform .2s,box-shadow .2s,background .2s;animation:fadein .35s ease both}
+@keyframes fadein{from{opacity:0;transform:translateY(6px)}}
+.repo:hover{border-color:var(--panel-hover)}
+.repo-top{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.repo h4{margin:0;font:600 17px/1.25 var(--fd);overflow-wrap:anywhere}
+.stars{display:inline-flex;align-items:center;gap:5px;font:500 13px/1 var(--fm);color:var(--fg);white-space:nowrap}
+.stars svg{width:13px;height:13px;color:var(--accent-2)}
+.repo p{margin:0;font-size:14px;color:var(--muted);flex:1}
+.repo p.none{font-style:italic;opacity:.8}
+.repo-meta{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.lang{display:inline-flex;align-items:center;gap:7px;font-size:13px;color:var(--fg)}
+.link{appearance:none;border:0;background:none;padding:6px 0;cursor:pointer;font:600 13px/1 var(--fb);color:var(--fg);text-decoration:underline;text-decoration-color:var(--accent);text-underline-offset:4px;display:inline-flex;gap:4px;min-height:32px;align-items:center}
+.link:hover{color:var(--accent-2)}
+.empty{grid-column:1/-1;padding:40px;text-align:center;border:1px dashed var(--panel-line);border-radius:var(--radius);color:var(--muted)}
+.foot-note{margin-top:48px;display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;padding-top:18px;border-top:var(--grid-w) solid var(--faint)}
+
+/* ============ Obsidian background layers ============ */
+.dir-obsidian .fx .s1{inset:-15%;background:radial-gradient(42% 18% at 12% 20%,rgba(255,255,255,.16),transparent 70%),radial-gradient(22% 42% at 94% 34%,rgba(255,255,255,.11),transparent 70%),radial-gradient(52% 16% at 72% 94%,rgba(255,255,255,.14),transparent 70%),linear-gradient(118deg,transparent 54%,rgba(255,255,255,.17) 58.5%,transparent 63%),linear-gradient(64deg,transparent 30%,rgba(255,255,255,.07) 36%,transparent 42%);filter:blur(22px);animation:smoke 20s ease-in-out infinite alternate}
+.dir-obsidian .fx .s2{inset:0;background-image:radial-gradient(rgba(255,255,255,.55) 1px,transparent 1.6px),radial-gradient(rgba(255,255,255,.3) 1px,transparent 1.5px);background-size:190px 150px,120px 210px;background-position:30px 60px,90px 20px;opacity:.5}
+@keyframes smoke{to{transform:translate(-40px,18px) rotate(2deg) scale(1.05)}}
+.dir-obsidian .repos{background:#050506}
+
+/* ============ toast ============ */
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);opacity:0;pointer-events:none;z-index:70;background:#0E0E10;color:#fff;border:1px solid rgba(255,255,255,.16);padding:10px 16px;border-radius:10px;font:500 13.5px/1.35 'Inter',system-ui,sans-serif;max-width:calc(100vw - 32px);transition:opacity .2s,transform .2s;text-shadow:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion: reduce){
+  .rb *,.rb *::before,.rb *::after{animation:none !important}
+  .pill,.tilt,.ring,.fcard{transition:none !important}
+}
+</style>
+
+</head>
+<body>
+<div class="rb dir-obsidian" id="rb">
+  <header class="bar">
+    <span class="brand lbl"><span class="glyph" aria-hidden="true"></span>RepoBox</span>
+    <span class="lbl mid">Repo explorer<em>Public GitHub repositories</em></span>
+    <span class="lbl crumb" id="crumb">Home / <b>Hero</b></span>
+  </header>
+
+  <section class="hero" id="s-hero" data-crumb="Hero">
+    <div class="fx" aria-hidden="true"><i class="s1"></i><i class="s2"></i></div>
+    <div class="gridlines" aria-hidden="true"></div>
+    <div class="hero-top">
+      <p class="lbl c1" style="margin:0">RepoBox<em>Every public repo, one box</em></p>
+      <p class="lbl c2" style="margin:0">RepoBox opens any GitHub profile. <em style="display:inline">Search, sort, and filter every public repository in one place.</em></p>
+    </div>
+
+    <div class="stage lit" id="stage" aria-hidden="true">
+      <div class="axis"></div>
+      <div class="glow"></div>
+      <div class="ring r1"></div>
+      <div class="ring r2"></div>
+      <div class="ring r3"></div>
+      <div class="tilt"><div class="hero-cube-wrap"><div class="cube hero-cube">
+        <i class="f f-back"></i><i class="f f-right"></i><i class="f f-bottom"></i><i class="f f-left"></i><i class="f f-top"></i><i class="f f-front"></i>
+        <b class="cl">RepoBox</b><b class="ci">&lt;/&gt;</b>
+      </div></div></div>
+      <div class="pills" id="pills"></div>
+    </div>
+
+    <form class="search" id="search" autocomplete="off">
+      <label class="lbl" for="u">GitHub username</label>
+      <div class="search-row"><span class="at" aria-hidden="true">@</span><input id="u" name="u" type="text" inputmode="text" spellcheck="false" placeholder="e.g. orbit-labs" maxlength="39"><button class="btn" type="submit">Open box</button></div>
+      <p class="hint" id="hint" aria-live="polite">Sample profiles: <button type="button" data-user="orbit-labs">orbit-labs</button> · <button type="button" data-user="pixelsmith">pixelsmith</button></p>
+    </form>
+    <span class="lbl corner l">Search</span>
+    <span class="lbl corner r">Sort · Filter</span>
+  </section>
+
+  <section class="how" id="s-how" data-crumb="How it works">
+    <div class="how-sticky">
+      <div class="gridlines" aria-hidden="true"></div>
+      <h2 class="h2">One username in.<br>Every repo out.</h2>
+      <div class="how-stage" id="how-stage">
+        <div class="axis" aria-hidden="true"></div>
+      </div>
+      <div class="how-foot"><span class="lbl">Home / How it works</span><span class="lbl" id="how-cap" style="text-align:right">01 · Type any GitHub username</span></div>
+    </div>
+  </section>
+
+  <section class="repos" id="s-repos" data-crumb="Repositories">
+    <div class="wrap">
+      <div class="profile" id="profile"></div>
+      <div class="sec-h">
+        <div><span class="lbl">Most starred</span><h3>Top repositories</h3></div>
+        <div class="arrows">
+          <button class="arrow" id="prev" aria-label="Previous repository"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 3 5 8l5 5"/></svg></button>
+          <button class="arrow" id="next" aria-label="Next repository"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6"><path d="m6 3 5 5-5 5"/></svg></button>
+        </div>
+      </div>
+      <div class="track" id="track" tabindex="0" aria-label="Top repositories carousel"></div>
+
+      <div class="sec-h" style="margin-top:56px"><div><span class="lbl">Search · Sort · Filter</span><h3>All repositories</h3></div></div>
+      <div class="controls">
+        <label class="filter" for="q"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="7" cy="7" r="4.5"/><path d="m10.5 10.5 3.5 3.5"/></svg><input id="q" type="search" placeholder="Filter by name or description" aria-label="Filter repositories"></label>
+        <div class="seg" role="group" aria-label="Sort repositories">
+          <button type="button" data-sort="stars" aria-pressed="true">Most stars</button>
+          <button type="button" data-sort="name" aria-pressed="false">Name A–Z</button>
+        </div>
+      </div>
+      <div class="langs" id="langs"></div>
+      <p class="count" id="count" aria-live="polite"></p>
+      <div class="list" id="list"></div>
+
+      <div class="foot-note">
+        <span class="lbl">RepoBox<em>Design preview · sample data</em></span>
+        <span class="lbl" style="text-align:right">The finished app<em>Loads live data from GitHub's public API</em></span>
+      </div>
+    </div>
+  </section>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(() => {
+'use strict';
+const $ = (s, r = document) => r.querySelector(s);
+const $$ = (s, r = document) => [...r.querySelectorAll(s)];
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const ease = t => t < .5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+const reduced = (() => { try { return matchMedia('(prefers-reduced-motion: reduce)').matches; } catch { return false; } })();
+const kfmt = n => n >= 1000 ? (n / 1000).toFixed(1).replace(/\.0$/, '') + 'k' : String(n);
+const nfmt = n => n.toLocaleString('en-US');
+let toastT;
+function toast(m) { const t = $('#toast'); t.textContent = m; t.classList.add('on'); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('on'), 2600); }
+
+/* ---------- sample data (design preview only) ---------- */
+const LANG = { TypeScript: '#3178C6', Rust: '#DEA584', Go: '#00ADD8', Swift: '#F05138', JavaScript: '#F1E05A', Python: '#3572A5', Shell: '#89E051', HTML: '#E34C26', 'C#': '#178600', GDShader: '#478CBF', GDScript: '#355570' };
+const PROFILES = {
+  'orbit-labs': { name: 'Orbit Labs', repos: [
+    { name: 'nebula-cli', desc: 'A tiny CLI for scaffolding static sites from Markdown.', lang: 'TypeScript', stars: 2418 },
+    { name: 'quartz-db', desc: 'Embedded key-value store with snapshot isolation.', lang: 'Rust', stars: 1932 },
+    { name: 'photon-ui', desc: 'Accessible React components with zero runtime CSS.', lang: 'TypeScript', stars: 1207 },
+    { name: 'tidepool', desc: 'Stream processing for small teams, shipped as one binary.', lang: 'Go', stars: 876 },
+    { name: 'lumen-notes', desc: 'Local-first notes app that syncs over Git.', lang: 'Swift', stars: 644 },
+    { name: 'atlas-maps', desc: 'Vector tile renderer for the browser.', lang: 'JavaScript', stars: 512 },
+    { name: 'ember-ml', desc: 'Minimal autograd engine for teaching machine learning.', lang: 'Python', stars: 389 },
+    { name: 'dotfiles', desc: 'Shell, editor, and terminal configuration.', lang: 'Shell', stars: 77 },
+    { name: 'sandbox', desc: '', lang: 'HTML', stars: 12 },
+    { name: 'hello-repobox', desc: 'Starter repository for testing RepoBox.', lang: 'Python', stars: 3 },
+  ] },
+  'pixelsmith': { name: 'Pixelsmith', repos: [
+    { name: 'sprite-forge', desc: 'Pixel-art sprite editor that runs in the browser.', lang: 'JavaScript', stars: 3104 },
+    { name: 'chiptune.js', desc: '8-bit sound synthesis with the Web Audio API.', lang: 'JavaScript', stars: 1488 },
+    { name: 'tilemap-kit', desc: 'Tools for building tile-based game levels.', lang: 'C#', stars: 702 },
+    { name: 'godot-shaders', desc: 'A collection of retro shaders for Godot 4.', lang: 'GDShader', stars: 655 },
+    { name: 'palette-lab', desc: 'Generate limited color palettes from photos.', lang: 'Python', stars: 231 },
+    { name: 'game-jam-2025', desc: '48-hour jam entry: a lighthouse puzzle game.', lang: 'GDScript', stars: 18 },
+  ] },
+};
+
+const S = { user: 'orbit-labs', q: '', sort: 'stars', lang: 'all', dir: 'obsidian', active: 0 };
+
+const STAR = '<svg viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 1.2l2.1 4.3 4.7.7-3.4 3.3.8 4.7L8 12l-4.2 2.2.8-4.7L1.2 6.2l4.7-.7z"/></svg>';
+const BOOK = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path d="M3 2.5h8.5v11H3.8a.8.8 0 0 1-.8-.8z"/><path d="M3 11.2c0-.6.4-1 1-1h7.5"/></svg>';
+const FACES = '<i class="f f-back"></i><i class="f f-right"></i><i class="f f-bottom"></i><i class="f f-left"></i><i class="f f-top"></i><i class="f f-front"></i>';
+const byStars = (a, b) => b.stars - a.stars || a.name.localeCompare(b.name);
+const repos = () => PROFILES[S.user].repos;
+const repoUrl = r => `https://github.com/${S.user}/${r.name}`;
+
+/* ---------- hero: pills + loop ---------- */
+const POS = [[50, 7], [13, 30], [87, 30], [15, 72], [85, 72], [50, 94]];
+function renderPills() {
+  const top = repos().slice().sort(byStars).slice(0, 6);
+  $('#pills').innerHTML = top.map((r, i) => `<span class="pill" style="--x:${POS[i][0]}%;--y:${POS[i][1]}%;--i:${i}"><span class="pi">${BOOK}</span><span class="pn">${esc(r.name)}</span><span class="ps">&#9733; ${kfmt(r.stars)}</span></span>`).join('');
+}
+const stage = $('#stage');
+let timers = [], hotTimer = 0, looping = false;
+function stopLoop() { timers.forEach(clearTimeout); timers = []; clearInterval(hotTimer); looping = false; }
+function at(ms, fn) { timers.push(setTimeout(fn, ms)); }
+function runLoop() {
+  stopLoop(); looping = true;
+  const pills = $$('.pill', stage);
+  if (reduced) { stage.classList.add('lit', 'map', 'active'); return; }
+  stage.classList.add('lit'); stage.classList.remove('map', 'active'); pills.forEach(p => p.classList.remove('hot'));
+  at(2300, () => stage.classList.remove('lit'));
+  at(2900, () => stage.classList.add('map'));
+  at(4600, () => { let k = 0; hotTimer = setInterval(() => { pills.forEach(p => p.classList.remove('hot')); pills[k % pills.length].classList.add('hot'); k++; }, 480); });
+  at(7700, () => { clearInterval(hotTimer); pills.forEach(p => p.classList.remove('hot')); stage.classList.add('active'); });
+  at(10200, () => stage.classList.remove('map'));
+  at(11000, () => { stage.classList.remove('active'); stage.classList.add('lit'); });
+  at(13400, runLoop);
+}
+const hero = $('#s-hero');
+hero.addEventListener('pointermove', e => {
+  if (e.pointerType === 'touch') return;
+  const r = stage.getBoundingClientRect();
+  stage.style.setProperty('--tx', clamp((e.clientX - (r.left + r.width / 2)) / (r.width / 2), -1, 1).toFixed(3));
+  stage.style.setProperty('--ty', clamp((e.clientY - (r.top + r.height / 2)) / (r.height / 2), -1, 1).toFixed(3));
+});
+hero.addEventListener('pointerleave', () => { stage.style.setProperty('--tx', '0'); stage.style.setProperty('--ty', '0'); });
+try {
+  new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { if (!looping) runLoop(); } else stopLoop(); }), { threshold: .15 }).observe(hero);
+} catch { runLoop(); }
+document.addEventListener('visibilitychange', () => { if (document.hidden) stopLoop(); });
+
+/* ---------- search ---------- */
+function loadUser(name, announce) {
+  S.user = name; S.q = ''; S.lang = 'all'; $('#q').value = '';
+  renderPills(); renderAll(); runLoop();
+  if (announce) $('#hint').innerHTML = `Opened <b>@${esc(name)}</b>: ${repos().length} public repositories. <a href="#s-repos" id="to-repos">See them below &darr;</a>`;
+}
+$('#search').addEventListener('submit', e => {
+  e.preventDefault();
+  const v = $('#u').value.trim().replace(/^@/, '').toLowerCase();
+  if (!v) { $('#hint').textContent = 'Type a GitHub username first.'; return; }
+  if (!/^[a-z\d](?:[a-z\d]|-(?=[a-z\d])){0,38}$/i.test(v)) { $('#hint').textContent = 'GitHub usernames use letters, numbers, and single hyphens.'; return; }
+  if (PROFILES[v]) { loadUser(v, true); return; }
+  $('#hint').innerHTML = `This preview only includes sample profiles: <button type="button" data-user="orbit-labs">orbit-labs</button> · <button type="button" data-user="pixelsmith">pixelsmith</button>. The finished app will load @${esc(v)} from GitHub.`;
+});
+
+/* ---------- how it works (scroll-built stack) ---------- */
+const STEPS = [
+  ['01', 'Enter a username', 'Type any GitHub username.'],
+  ['02', 'Fetch public repos', "RepoBox calls GitHub's public API."],
+  ['03', 'Sort & filter', 'Order by stars or name, then search.'],
+];
+const SCATTER = [[-2.3, -0.9], [2.0, -1.8], [0.9, 1.35]];
+$('#how-stage').insertAdjacentHTML('beforeend', STEPS.map((s, i) => `<div class="step" data-i="${i}" style="z-index:${3 - i}"><div class="guide"></div><div class="mini"><div class="cube">${FACES}</div></div><div class="tag"><b>${s[0]}</b><span>${esc(s[1])}<small>${esc(s[2])}</small></span></div></div>`).join(''));
+const howSec = $('#s-how'), stepEls = $$('.step', howSec), howCap = $('#how-cap');
+function updateHow() {
+  const r = howSec.getBoundingClientRect(); const vh = innerHeight || 800;
+  const p = clamp(-r.top / Math.max(1, howSec.offsetHeight - vh), 0, 1);
+  const t = ease(clamp((p - .05) / .5, 0, 1)); const ex = ease(clamp((p - .72) / .26, 0, 1));
+  const ms = parseFloat(getComputedStyle($('#how-stage')).getPropertyValue('--ms')) || 80;
+  const s = stepEls[0].querySelector('.mini').offsetWidth || ms;
+  const active = p < .36 ? 0 : p < .64 ? 1 : 2;
+  stepEls.forEach((el, i) => {
+    const sy = (i - 1) * (0.816 + 0.5 * ex) * s;
+    const x = lerp(SCATTER[i][0] * s, 0, t), y = lerp(SCATTER[i][1] * s, sy, t);
+    el.style.setProperty('--x', x.toFixed(1) + 'px'); el.style.setProperty('--y', y.toFixed(1) + 'px');
+    const g = el.querySelector('.guide');
+    g.style.left = Math.min(0, x) + 'px'; g.style.top = Math.min(sy, y) + 'px';
+    g.style.width = Math.abs(x) + 'px'; g.style.height = Math.abs(y - sy) + 'px';
+    el.style.setProperty('--go', ((1 - t) * .8).toFixed(2));
+    el.classList.toggle('on', i === active);
+  });
+  howCap.textContent = `${STEPS[active][0]} · ${STEPS[active][2]}`;
+}
+let raf = 0;
+addEventListener('scroll', () => { if (!raf) raf = requestAnimationFrame(() => { raf = 0; updateHow(); }); }, { passive: true });
+addEventListener('resize', () => { updateHow(); centerActive(false); });
+
+/* ---------- breadcrumb ---------- */
+try {
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) $('#crumb').innerHTML = `Home / <b>${esc(e.target.dataset.crumb)}</b>`; }), { rootMargin: '-45% 0px -50% 0px' });
+  $$('[data-crumb]').forEach(s => io.observe(s));
+} catch {}
+
+/* ---------- repos: profile, carousel, list ---------- */
+function renderProfile() {
+  const rs = repos(); const total = rs.reduce((a, r) => a + r.stars, 0);
+  $('#profile').innerHTML = `<div class="avatar" aria-hidden="true">${esc(PROFILES[S.user].name.charAt(0))}</div><div><h2>@${esc(S.user)}</h2><div class="meta">${esc(PROFILES[S.user].name)} · ${rs.length} public repositories · ${nfmt(total)} stars</div></div><span class="badge" title="The finished app loads real repositories from GitHub">Sample data</span>`;
+}
+function renderFeatured() {
+  const top = repos().slice().sort(byStars).slice(0, 4); const max = top[0].stars;
+  $('#track').innerHTML = top.map((r, i) => {
+    const k = Math.max(1, Math.round(1 + 3 * Math.log(r.stars + 1) / Math.log(max + 1)) - (i === 0 ? 0 : 0));
+    const cubes = Array.from({ length: Math.min(4, k) }, (_, j) => `<div class="mini" style="--j:${j}"><div class="cube${j === Math.min(4, k) - 1 ? ' acc' : ''}">${FACES}</div></div>`).join('');
+    return `<article class="fcard${i === 0 ? ' active' : ''}" data-i="${i}"><span class="lbl">#${i + 1} · ${esc(r.lang)}</span><h4 style="margin-top:8px">${esc(r.name)}</h4><p>${esc(r.desc || 'No description provided.')}</p><div class="iso" aria-hidden="true" style="--k:${Math.min(4, k)}"><div class="floor"></div>${cubes}<span class="spill">${STAR} ${kfmt(r.stars)}</span></div><div class="foot"><span class="lang"><span class="dot" style="background:${LANG[r.lang] || '#999'}"></span>${esc(r.lang)}</span><button type="button" class="link" data-url="${esc(repoUrl(r))}">Open on GitHub &#8599;</button></div></article>`;
+  }).join('');
+  S.active = 0; requestAnimationFrame(() => centerActive(false));
+}
+function renderLangs() {
+  const langs = [...new Set(repos().map(r => r.lang))].sort();
+  if (S.lang !== 'all' && !langs.includes(S.lang)) S.lang = 'all';
+  $('#langs').innerHTML = `<button type="button" class="chip" data-lang="all" aria-pressed="${S.lang === 'all'}">All languages</button>` + langs.map(l => `<button type="button" class="chip" data-lang="${esc(l)}" aria-pressed="${S.lang === l}"><span class="dot" style="background:${LANG[l] || '#999'}"></span>${esc(l)}</button>`).join('');
+}
+function renderList() {
+  const q = S.q.trim().toLowerCase(); const all = repos();
+  let rs = all.filter(r => (S.lang === 'all' || r.lang === S.lang) && (!q || (r.name + ' ' + r.desc).toLowerCase().includes(q)));
+  rs.sort(S.sort === 'name' ? (a, b) => a.name.localeCompare(b.name) : byStars);
+  $('#count').textContent = `Showing ${rs.length} of ${all.length} repositories · sorted by ${S.sort === 'name' ? 'name' : 'stars'}`;
+  $('#list').innerHTML = rs.length ? rs.map((r, i) => `<article class="repo" style="animation-delay:${Math.min(i, 8) * 35}ms"><div class="repo-top"><h4>${esc(r.name)}</h4><span class="stars">${STAR}${nfmt(r.stars)}</span></div><p class="${r.desc ? '' : 'none'}">${esc(r.desc || 'No description provided.')}</p><div class="repo-meta"><span class="lang"><span class="dot" style="background:${LANG[r.lang] || '#999'}"></span>${esc(r.lang)}</span><button type="button" class="link" data-url="${esc(repoUrl(r))}">View on GitHub &#8599;</button></div></article>`).join('')
+    : `<div class="empty">No repositories match "${esc(S.q)}"${S.lang !== 'all' ? ` in ${esc(S.lang)}` : ''}. <button type="button" class="link" data-act="clear">Clear filters</button></div>`;
+}
+function renderAll() { renderProfile(); renderFeatured(); renderLangs(); renderList(); }
+
+/* carousel behavior */
+const track = $('#track');
+function cards() { return $$('.fcard', track); }
+function centerActive(smooth) {
+  const c = cards()[S.active]; if (!c) return;
+  track.scrollTo({ left: c.offsetLeft - (track.clientWidth - c.offsetWidth) / 2, behavior: smooth && !reduced ? 'smooth' : 'auto' });
+}
+function goCard(i) { const n = cards().length; S.active = (i + n) % n; markActive(); centerActive(true); }
+function markActive() { cards().forEach((c, i) => c.classList.toggle('active', i === S.active)); }
+let tScroll = 0;
+track.addEventListener('scroll', () => {
+  clearTimeout(tScroll);
+  tScroll = setTimeout(() => {
+    const mid = track.scrollLeft + track.clientWidth / 2; let best = 0, bd = Infinity;
+    cards().forEach((c, i) => { const d = Math.abs(c.offsetLeft + c.offsetWidth / 2 - mid); if (d < bd) { bd = d; best = i; } });
+    if (best !== S.active) { S.active = best; markActive(); }
+  }, 90);
+}, { passive: true });
+$('#prev').addEventListener('click', () => { pauseAuto(); goCard(S.active - 1); });
+$('#next').addEventListener('click', () => { pauseAuto(); goCard(S.active + 1); });
+let autoOn = false, pausedUntil = 0;
+function pauseAuto() { pausedUntil = Date.now() + 8000; }
+['pointerdown', 'wheel', 'touchstart', 'focusin'].forEach(ev => track.addEventListener(ev, pauseAuto, { passive: true }));
+track.addEventListener('pointerenter', () => { pausedUntil = Date.now() + 60000; });
+track.addEventListener('pointerleave', () => { pausedUntil = Date.now() + 1500; });
+track.addEventListener('keydown', e => { if (e.key === 'ArrowRight') { e.preventDefault(); pauseAuto(); goCard(S.active + 1); } if (e.key === 'ArrowLeft') { e.preventDefault(); pauseAuto(); goCard(S.active - 1); } });
+try { new IntersectionObserver(es => es.forEach(e => { autoOn = e.isIntersecting; }), { threshold: .4 }).observe(track); } catch {}
+if (!reduced) setInterval(() => { if (autoOn && !document.hidden && Date.now() > pausedUntil) goCard(S.active + 1); }, 4200);
+
+/* ---------- events ---------- */
+document.addEventListener('click', e => {
+  const t = e.target.closest('[data-user],[data-url],[data-sort],[data-lang],[data-act],#to-repos');
+  if (!t) return;
+  if (t.dataset.user) { $('#u').value = t.dataset.user; loadUser(t.dataset.user, true); return; }
+  if (t.dataset.url) { toast(`Sample data. The finished app opens ${t.dataset.url.replace('https://', '')}`); return; }
+  if (t.dataset.sort) { S.sort = t.dataset.sort; $$('[data-sort]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.sort === S.sort))); renderList(); return; }
+  if (t.dataset.lang) { S.lang = t.dataset.lang; renderLangs(); renderList(); return; }
+  if (t.dataset.act === 'clear') { S.q = ''; S.lang = 'all'; $('#q').value = ''; renderLangs(); renderList(); return; }
+  if (t.id === 'to-repos') { e.preventDefault(); $('#s-repos').scrollIntoView({ behavior: reduced ? 'auto' : 'smooth' }); }
+});
+$('#q').addEventListener('input', e => { S.q = e.target.value; renderList(); });
+
+/* ---------- init ---------- */
+renderPills(); renderAll();
+updateHow();
+})();
+</script>
+
+</body>
+</html>

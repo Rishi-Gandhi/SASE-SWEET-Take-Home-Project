@@ -1,32 +1,39 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   BLUEPRINT
+   OBSIDIAN
    ---------------------------------------------------------------------------
-   The app is drawn as a technical document: a measurement grid, registration
-   marks, dimension lines, figure references. Dark mode is a classic cyanotype
-   blueprint (pale lines on drafting blue); light mode is a bluleline print
-   (navy ink on paper). Both are the same drawing.
+   A pure-black canvas, 1px hairlines, small uppercase mono labels, and a
+   single cobalt accent. Every colour is a custom property defined once below;
+   Tailwind reads them through @theme, so utilities and the hand-written 3D
+   and motion CSS share one source.
 
-   Three colour roles, and the separation between them is the whole system:
-
-   1. DATA — the three language hues. Validated all-pairs for colour-vision
-      deficiency against BOTH surfaces below (#0b2a47 dark, #faf8f2 light):
-      worst CVD ΔE 9.4 dark / 9.2 light (≥8 required), worst normal-vision
-      ΔE 24.6 dark / 27.6 light (≥15 required). Three is the cap — a fourth
-      named hue cannot clear the gate, so the tail folds into neutral grey.
-
-   2. CHROME — grid lines, rules, annotations. Deliberately BELOW the chroma
-      floor (#6d9ab9 measures 0.067, floor is 0.1) so it reads as structure
-      and can never be mistaken for a data series.
-
-   3. ACCENT — interaction, focus, and magnitude. Achromatic on purpose
-      (#eaf4ff dark / #12283d light, chroma 0.018 / 0.048), because the
-      obvious blueprint accent — cyan — sits only ΔE 12.4 from the violet
-      language hue and would have been confusable with it.
+   Contrast against the canvas (#020202), measured with the WCAG formula:
+   --fg 18.7:1, --muted 6.4:1 (6.0:1 on --panel), white on --accent 6.6:1,
+   and --accent as a focus ring 3.1:1 against the 3:1 non-text minimum.
 --------------------------------------------------------------------------- */
 
 @theme inline {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-faint: var(--faint);
+  --color-accent: var(--accent);
+  --color-accent-2: var(--accent-2);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-panel: var(--panel);
+  --color-panel-line: var(--panel-line);
+  --color-panel-hover: var(--panel-hover);
+  --color-pill: var(--pill-bg);
+  --color-pill-line: var(--pill-line);
+  --color-input: var(--input-bg);
+  --color-input-line: var(--input-line);
+  --color-warning: var(--warning);
+  --color-critical: var(--critical);
+
+  /* Transitional: old blueprint names, removed with the block further down. */
   --color-page: var(--page);
   --color-surface: var(--surface);
   --color-inset: var(--inset);
@@ -35,111 +42,107 @@
   --color-ink-3: var(--ink-3);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
-  --color-accent: var(--accent);
-  --color-accent-soft: var(--accent-soft);
   --color-accent-ink: var(--accent-ink);
   --color-lang-1: var(--lang-1);
   --color-lang-2: var(--lang-2);
   --color-lang-3: var(--lang-3);
   --color-lang-other: var(--lang-other);
-  --color-critical: var(--critical);
-  --color-warning: var(--warning);
 
-  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: "Chakra Petch", system-ui, sans-serif;
-  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+  --font-sans: var(--ff-body);
+  --font-display: var(--ff-display);
+  --font-mono: var(--ff-mono);
 
-  --radius-card: 2px;
+  --radius-card: var(--radius);
 }
 
-/* Light = blueline print on drafting paper. */
 :root {
-  color-scheme: light;
-  --page: #efece3;
-  --surface: #faf8f2;
-  --inset: #e9e5da;
-  --ink: #12283d;
-  --ink-2: #40566c;
-  --ink-3: #7c8b99;
-  --line: #c9cdd0;
-  --line-strong: #98a3ad;
-  --accent: #12283d;
-  --accent-soft: rgba(18, 40, 61, 0.08);
-  --accent-ink: #faf8f2;
-  --lang-1: #eb6834;
-  --lang-2: #1baf7a;
-  --lang-3: #4a3aa7;
-  --lang-other: #8b8f93;
-  --critical: #b3261e;
-  --warning: #9a6700;
-  --grid-minor: rgba(18, 40, 61, 0.055);
-  --grid-major: rgba(18, 40, 61, 0.1);
-  /* Sequential ramp for magnitude: paper -> ink, monotonic lightness. */
-  --ramp-0: #e4e0d5;
-  --ramp-1: #b9c6d2;
-  --ramp-2: #7e9ab3;
-  --ramp-3: #436b8f;
-  --ramp-4: #12283d;
-}
-
-/* Dark is declared twice: once for the OS setting, once for the in-app
-   toggle. The :not() guard lets an explicit light choice beat OS dark. */
-@media (prefers-color-scheme: dark) {
-  :root:where(:not([data-theme="light"])) {
-    color-scheme: dark;
-    --page: #061a2e;
-    --surface: #0b2a47;
-    --inset: #0f3454;
-    --ink: #eaf4ff;
-    --ink-2: #a9cde8;
-    --ink-3: #6d9ab9;
-    --line: #1b4a74;
-    --line-strong: #2d6595;
-    --accent: #eaf4ff;
-    --accent-soft: rgba(234, 244, 255, 0.12);
-    --accent-ink: #061a2e;
-    --lang-1: #d95926;
-    --lang-2: #199e70;
-    --lang-3: #9085e9;
-    --lang-other: #7d8a95;
-    --critical: #ff8a80;
-    --warning: #f0b429;
-    --grid-minor: rgba(120, 180, 225, 0.075);
-    --grid-major: rgba(120, 180, 225, 0.14);
-    --ramp-0: #0e3152;
-    --ramp-1: #1a5580;
-    --ramp-2: #3a82b5;
-    --ramp-3: #77b6dd;
-    --ramp-4: #dceeff;
-  }
-}
-
-:root[data-theme="dark"] {
   color-scheme: dark;
-  --page: #061a2e;
-  --surface: #0b2a47;
-  --inset: #0f3454;
-  --ink: #eaf4ff;
-  --ink-2: #a9cde8;
-  --ink-3: #6d9ab9;
-  --line: #1b4a74;
-  --line-strong: #2d6595;
-  --accent: #eaf4ff;
-  --accent-soft: rgba(234, 244, 255, 0.12);
-  --accent-ink: #061a2e;
+
+  /* Type: display for headings, body for text, mono for labels. Defined here
+     rather than only in @theme so hand-written CSS can always reach them —
+     Tailwind emits a theme variable only when something references it. */
+  --ff-display: "Inter Tight", "Helvetica Neue", Arial, sans-serif;
+  --ff-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ff-mono: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Cards are 14px; pills, inputs and buttons are fully rounded. */
+  --radius: 14px;
+
+  /* Canvas and text. */
+  --bg: #020202;
+  --bg2: #050506;
+  --fg: #f2f3f5;
+  --muted: #8a8f98;
+  --faint: rgba(255, 255, 255, 0.08);
+
+  /* The one accent. */
+  --accent: #2e4fd2;
+  --accent-2: #6a95ec;
+  --accent-soft: rgba(46, 79, 210, 0.22);
+  --on-accent: #ffffff;
+
+  /* Surfaces. */
+  --panel: #0c0d10;
+  --panel-line: rgba(255, 255, 255, 0.09);
+  --panel-hover: rgba(106, 149, 236, 0.55);
+  --pill-bg: rgba(22, 23, 27, 0.92);
+  --pill-line: rgba(255, 255, 255, 0.14);
+  --pill-fg: #e6e8ec;
+  --hot-bg: #f2f3f5;
+  --hot-fg: #0b0b0c;
+  --input-bg: rgba(255, 255, 255, 0.04);
+  --input-line: rgba(255, 255, 255, 0.16);
+  --glow: rgba(46, 79, 210, 0.55);
+
+  /* The cube: unlit glass, lit glass, and the solid accent variant. */
+  --edge: rgba(190, 200, 230, 0.34);
+  --c-top: rgba(44, 48, 64, 0.92);
+  --c-left: rgba(20, 22, 32, 0.94);
+  --c-front: rgba(10, 11, 18, 0.96);
+  --l-top: linear-gradient(140deg, rgba(170, 195, 255, 0.9), rgba(96, 128, 245, 0.85));
+  --l-left: linear-gradient(160deg, rgba(80, 112, 236, 0.82), rgba(28, 48, 190, 0.86));
+  --l-front: linear-gradient(160deg, rgba(58, 90, 226, 0.84), rgba(14, 29, 156, 0.9));
+  --l-edge: rgba(175, 198, 255, 0.85);
+  --a-top: #7e9bf2;
+  --a-left: #3656d8;
+  --a-front: #1e36b4;
+  --cube-label: #ffffff;
+
+  /* Status colours stay apart from the accent, so "running low" reads as a
+     state rather than as emphasis. */
+  --warning: #f0b429;
+  --critical: #ff8a80;
+
+  /* Sequential ramp for the activity strip: panel to accent, lightness
+     rising monotonically so it survives any colour-vision deficiency. */
+  --ramp-0: rgba(255, 255, 255, 0.05);
+  --ramp-1: #1b2a5c;
+  --ramp-2: #283f9e;
+  --ramp-3: #4868e0;
+  --ramp-4: #9fb5f6;
+
+  /* The two compared accounts: two lightnesses of one hue. */
+  --series-a: #aac3ff;
+  --series-b: #3656d8;
+}
+
+/* TRANSITIONAL — the old blueprint names pointed at Obsidian values, so any
+   screen not yet redrawn stays legible mid-migration. Deleted once the last
+   component stops using them. */
+:root {
+  --page: var(--bg);
+  --surface: var(--panel);
+  --inset: rgba(255, 255, 255, 0.04);
+  --ink: var(--fg);
+  --ink-2: #c4c8ce;
+  --ink-3: var(--muted);
+  --line: var(--panel-line);
+  --line-strong: rgba(255, 255, 255, 0.22);
+  --accent-ink: var(--on-accent);
   --lang-1: #d95926;
   --lang-2: #199e70;
   --lang-3: #9085e9;
   --lang-other: #7d8a95;
-  --critical: #ff8a80;
-  --warning: #f0b429;
-  --grid-minor: rgba(120, 180, 225, 0.075);
-  --grid-major: rgba(120, 180, 225, 0.14);
-  --ramp-0: #0e3152;
-  --ramp-1: #1a5580;
-  --ramp-2: #3a82b5;
-  --ramp-3: #77b6dd;
-  --ramp-4: #dceeff;
 }
 
 html {
@@ -149,39 +152,24 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
-  background-color: var(--page);
-  color: var(--ink);
-  font-family: var(--font-sans);
+  background-color: var(--bg);
+  color: var(--fg);
+  font: 15px/1.55 var(--ff-body);
   -webkit-font-smoothing: antialiased;
-}
-
-/* The drawing sheet: a 16px minor grid with an 80px major grid over it.
-   Purely structural, sits behind everything, never intercepts the pointer. */
-body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-major) 1px, transparent 1px),
-    linear-gradient(to right, var(--grid-minor) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--grid-minor) 1px, transparent 1px);
-  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
 }
 
 :where(a, button, input, select, [tabindex]):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
-  border-radius: 2px;
 }
 
 ::selection {
   background: var(--accent);
-  color: var(--accent-ink);
+  color: var(--on-accent);
 }
 
+/* Zeroing the delay as well as the duration matters: a staggered card with
+   only its duration zeroed would sit at opacity 0 for its whole delay. */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -190,9 +178,66 @@ body::before {
     animation-delay: 0ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.001ms !important;
+    transition-delay: 0ms !important;
     scroll-behavior: auto !important;
   }
 }
+
+/* A label: small, uppercase, mono. An <em> inside is its muted second line. */
+@utility label {
+  font: 500 11px/1.45 var(--ff-mono);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.label em {
+  display: block;
+  font-style: normal;
+  color: var(--muted);
+}
+
+/* The base surface every card and panel is drawn on. No shadow: depth comes
+   from the border, the glow, and contrast. */
+@utility panel {
+  background-color: var(--panel);
+  border: 1px solid var(--panel-line);
+  border-radius: var(--radius);
+}
+
+/* Cards fade up on a cascade. The delay is set per card as --enter-delay and
+   capped by the caller, so a long list is not a wait. */
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+
+@utility enter {
+  animation: enter 0.35s ease both;
+  animation-delay: var(--enter-delay, 0ms);
+}
+
+@keyframes shimmer {
+  from { background-position: -180% 0; }
+  to { background-position: 180% 0; }
+}
+
+@utility skeleton {
+  background-image: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.09) 50%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+  background-size: 180% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+}
+
+/* ---------------------------------------------------------------------------
+   TRANSITIONAL blueprint utilities, used only by components not yet redrawn.
+--------------------------------------------------------------------------- */
 
 @keyframes deck-rise {
   from { opacity: 0; transform: translateY(6px); }
@@ -209,18 +254,10 @@ body::before {
   to { opacity: 1; transform: none; }
 }
 
-@keyframes deck-shimmer {
-  from { background-position: -180% 0; }
-  to { background-position: 180% 0; }
-}
-
 @utility deck-rise {
   animation: deck-rise 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
 }
 
-/* Cards arrive on a cascade. The delay is set per card as --enter-delay and
-   capped by the caller, so a 500-repo account does not spend twelve seconds
-   drawing itself in. */
 @utility deck-enter {
   animation: deck-enter 0.44s cubic-bezier(0.22, 1, 0.36, 1) both;
   animation-delay: var(--enter-delay, 0ms);
@@ -238,19 +275,15 @@ body::before {
     var(--inset) 100%
   );
   background-size: 180% 100%;
-  animation: deck-shimmer 1.4s ease-in-out infinite;
+  animation: shimmer 1.4s ease-in-out infinite;
 }
 
-/* A sheet: the base surface every panel is drawn on. */
 @utility sheet {
   background-color: var(--surface);
   border: 1px solid var(--line);
-  border-radius: var(--radius-card);
+  border-radius: 2px;
 }
 
-/* Registration marks at the four corners, the way a drawing is trimmed.
-   Eight solid-colour gradients: one horizontal and one vertical arm per
-   corner, so no extra DOM is needed. */
 @utility bp-corners {
   background-image:
     linear-gradient(var(--ink-3), var(--ink-3)), linear-gradient(var(--ink-3), var(--ink-3)),
@@ -264,23 +297,6 @@ body::before {
     left 7px bottom 7px, left 7px bottom 7px,
     right 7px bottom 7px, right 7px bottom 7px;
   background-repeat: no-repeat;
-}
-
-/* Drafting annotation: condensed, uppercase, letterspaced. */
-@utility label {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 500;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-3);
-}
-
-/* A dimension line: a rule with a tick at each end. */
-@utility bp-dim {
-  position: relative;
-  height: 1px;
-  background: var(--line-strong);
 }
 
 @utility bp-tick {
