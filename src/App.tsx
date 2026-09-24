@@ -111,8 +111,13 @@ export default function App() {
     ].join('|'),
   );
 
-  // The top bar is 48px tall, so "scrolled past" starts beneath it.
-  const collapsed = useScrolledPast(headerNode, '-48px 0px 0px 0px');
+  // The top bar is 48px tall, so "scrolled past" starts beneath it. The root
+  // also reaches far below the viewport: an instant jump from past the header
+  // straight to the top (Home, "/" under reduced motion) goes from "above" to
+  // "below" without ever intersecting a viewport-sized root, so no callback
+  // would fire and the condensed strip would stick. Counting everything below
+  // the fold as intersecting makes every jump cross a threshold.
+  const collapsed = useScrolledPast(headerNode, '-48px 0px 100000px 0px');
 
   const condensed: CondensedProfile | null =
     collapsed && profile
