@@ -8,11 +8,15 @@ export interface RepoQuery {
   sourcesOnly: boolean;
 }
 
-export const SORT_OPTIONS: Array<{ value: SortKey; label: string }> = [
-  { value: 'stars', label: 'Most stars' },
-  { value: 'updated', label: 'Recently updated' },
-  { value: 'name', label: 'Name (A–Z)' },
-  { value: 'forks', label: 'Most forks' },
+/**
+ * `label` names the sort in the palette, `short` fits a segmented control on
+ * a phone, and `noun` finishes "sorted by …" under the controls.
+ */
+export const SORT_OPTIONS: Array<{ value: SortKey; label: string; short: string; noun: string }> = [
+  { value: 'stars', label: 'Most stars', short: 'Stars', noun: 'stars' },
+  { value: 'updated', label: 'Recently updated', short: 'Updated', noun: 'last update' },
+  { value: 'name', label: 'Name (A–Z)', short: 'Name A–Z', noun: 'name' },
+  { value: 'forks', label: 'Most forks', short: 'Forks', noun: 'forks' },
 ];
 
 /**

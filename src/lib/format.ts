@@ -1,6 +1,12 @@
-/** 1234 -> "1.2k", 203118 -> "203k". Keeps star counts from wrapping on mobile. */
+const compact = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
+
+/**
+ * 2418 -> "2.4k", 1250000 -> "1.3M". Keeps counts short in pills and on
+ * phones. Intl writes thousands as "K"; lowercasing only that one gives the
+ * SI prefixes (k for kilo, M for mega), which is what the design sets.
+ */
 export function compactNumber(value: number): string {
-  return new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(value);
+  return compact.format(value).replace('K', 'k');
 }
 
 export function exactNumber(value: number): string {

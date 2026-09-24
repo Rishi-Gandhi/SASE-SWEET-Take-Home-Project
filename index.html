@@ -1,27 +1,19 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>RepoBox — GitHub Repository Explorer</title>
-    <meta name="description" content="Search any GitHub user and explore their public repositories: sort by stars, name, or recency, filter by language or topic, and read the shape of their work at a glance." />
-    <meta name="color-scheme" content="dark light" />
+    <meta name="description" content="Open any GitHub profile and explore its public repositories: search, sort by stars, name, recency or forks, and filter by language or topic." />
+    <meta name="color-scheme" content="dark" />
+    <meta name="theme-color" content="#020202" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Chakra+Petch:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter+Tight:wght@500;600;700&family=Inter:wght@400;500;600&display=swap"
     />
-    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23061a2e'/%3E%3Cpath d='M6 6h4M6 6v4M26 6h-4M26 6v4M6 26h4M6 26v-4M26 26h-4M26 26v-4' stroke='%236d9ab9' stroke-width='1.6'/%3E%3Cpath d='M16 10l6 3.5v7L16 24l-6-3.5v-7z' fill='none' stroke='%23eaf4ff' stroke-width='2' stroke-linejoin='round'/%3E%3C/svg%3E" />
-    <script>
-      // Applied before first paint so a light-mode viewer never sees a dark flash.
-      try {
-        var stored = localStorage.getItem('repo-deck:theme');
-        document.documentElement.dataset.theme = stored === 'light' || stored === 'dark' ? stored : 'dark';
-      } catch (_) {
-        document.documentElement.dataset.theme = 'dark';
-      }
-    </script>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23020202'/%3E%3Crect x='9.5' y='9.5' width='13' height='13' fill='none' stroke='%23F2F3F5' stroke-width='2' transform='rotate(45 16 16)'/%3E%3Crect x='13' y='13' width='6' height='6' fill='%232E4FD2' transform='rotate(45 16 16)'/%3E%3C/svg%3E" />
   </head>
   <body>
     <div id="root"></div>

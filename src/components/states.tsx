@@ -1,73 +1,33 @@
 import type { GitHubError } from '../lib/github';
 import { timeUntil } from '../lib/format';
-import { AlertIcon, DeckMark, SearchIcon } from './icons';
+import { Cube } from './Cube';
+import { AlertIcon } from './icons';
 
-const SUGGESTIONS = ['torvalds', 'sindresorhus', 'gaearon', 'simonw', 'anthropics'];
+const clock = new Intl.DateTimeFormat('en', { timeStyle: 'short' });
 
-function HandleRow({
-  title,
-  handles,
-  onPick,
-}: {
-  title: string;
-  handles: string[];
-  onPick: (username: string) => void;
-}) {
-  if (handles.length === 0) return null;
+/**
+ * Before any search. The hero above holds the field and the suggestions; this
+ * only says where the results will appear, and gets the viewer back up there.
+ */
+export function ReposIdle({ onStart }: { onStart: () => void }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-      <span className="label">{title}</span>
-      {handles.map((name) => (
-        <button
-          key={name}
-          type="button"
-          onClick={() => onPick(name)}
-          className="cursor-pointer rounded-[2px] border border-line px-3 py-1 font-mono text-xs text-ink-2 transition-colors hover:border-accent hover:text-accent"
-        >
-          {name}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** First run: explain the app in one line and make it trivially easy to try. */
-export function IdleState({
-  onPick,
-  pinned,
-  recent,
-}: {
-  onPick: (username: string) => void;
-  pinned: string[];
-  recent: string[];
-}) {
-  // Anything already pinned would be a duplicate in the recents row.
-  const recentOnly = recent.filter(
-    (name) => !pinned.some((p) => p.toLowerCase() === name.toLowerCase()),
-  );
-
-  return (
-    <div className="deck-rise flex flex-col items-center px-4 py-16 text-center sm:py-24">
-      <DeckMark className="size-12 text-accent" />
-      <h2 className="mt-5 max-w-xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-        Draw anyone&rsquo;s GitHub
-      </h2>
-      <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-2">
-        Enter a username to see their public repositories — sorted, filtered, and weighed by the
-        languages they actually build in.
+    <div className="empty-panel enter">
+      <p className="label">
+        Nothing opened yet<em>Repositories appear here</em>
       </p>
-
-      <HandleRow title="Pinned" handles={pinned} onPick={onPick} />
-      <HandleRow title="Recent" handles={recentOnly.slice(0, 6)} onPick={onPick} />
-      {pinned.length === 0 && recentOnly.length === 0 && (
-        <HandleRow title="Try" handles={SUGGESTIONS} onPick={onPick} />
-      )}
+      <p className="mt-3 max-w-sm text-sm text-muted">
+        Search a GitHub username above to open its box: every public repository, sortable and
+        filterable.
+      </p>
+      <button type="button" onClick={onStart} className="chip mt-5">
+        Search a username
+      </button>
     </div>
   );
 }
 
 function SkeletonBlock({ className }: { className: string }) {
-  return <div className={`deck-skeleton rounded-[2px] ${className}`} />;
+  return <div className={`skeleton rounded-full ${className}`} />;
 }
 
 /**
@@ -82,26 +42,31 @@ export function LoadingState() {
         Loading repositories…
       </p>
 
-      <section className="sheet bp-corners p-5 sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row">
-          <SkeletonBlock className="size-20 shrink-0 rounded-[2px] sm:size-22" />
-          <div className="flex-1 space-y-2.5">
-            <SkeletonBlock className="h-6 w-48" />
-            <SkeletonBlock className="h-4 w-full max-w-md" />
+      <div className="profile">
+        <div className="profile-head">
+          <div className="skeleton size-16 shrink-0 rounded-card" />
+          <div className="flex-1 space-y-3 pt-1">
+            <SkeletonBlock className="h-7 w-56" />
+            <SkeletonBlock className="h-3.5 w-full max-w-md" />
             <SkeletonBlock className="h-3 w-40" />
           </div>
         </div>
-        <div className="mt-5 grid grid-cols-2 gap-2.5 sm:grid-cols-4">
-          {Array.from({ length: 4 }, (_, i) => (
-            <SkeletonBlock key={i} className="h-14 rounded-[2px]" />
-          ))}
-        </div>
-        <SkeletonBlock className="mt-6 h-[10px] w-full rounded-[1px]" />
-      </section>
+      </div>
 
-      <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <div className="repo-grid mt-10">
         {Array.from({ length: 6 }, (_, i) => (
-          <SkeletonBlock key={i} className="h-[196px] rounded-[2px]" />
+          <div key={i} className="repo-card" aria-hidden="true">
+            <div className="flex justify-between gap-4">
+              <SkeletonBlock className="h-4 w-2/5" />
+              <SkeletonBlock className="h-4 w-12" />
+            </div>
+            <SkeletonBlock className="h-3 w-4/5" />
+            <SkeletonBlock className="h-3 w-3/5" />
+            <div className="mt-auto flex justify-between gap-4 pt-6">
+              <SkeletonBlock className="h-3 w-20" />
+              <SkeletonBlock className="h-3 w-24" />
+            </div>
+          </div>
         ))}
       </div>
     </div>
@@ -111,31 +76,53 @@ export function LoadingState() {
 /** The account exists but has nothing public to show. */
 export function NoReposState({ login }: { login: string }) {
   return (
-    <div className="sheet bp-corners deck-rise flex flex-col items-center px-6 py-14 text-center">
-      <DeckMark className="size-9 text-ink-3" />
-      <h3 className="mt-4 font-display text-lg font-semibold">No public repositories</h3>
-      <p className="mt-2 max-w-sm text-sm text-ink-2">
-        <span className="font-mono">@{login}</span> has a GitHub account, but nothing public to show
-        yet.
+    <div className="empty-panel enter">
+      <div className="empty-cube" aria-hidden="true">
+        <Cube iso size="34px" />
+      </div>
+      <h3 className="mt-5 font-display text-lg font-semibold">No public repositories</h3>
+      <p className="mt-2 max-w-sm text-sm text-muted">
+        @{login} has a GitHub account, but nothing public to show yet.
       </p>
     </div>
   );
 }
 
+/**
+ * Says which filters emptied the list, in their own words, so the way out is
+ * obvious: `No repositories match "zz" in Rust.`
+ */
+function noMatchMessage({
+  search,
+  language,
+  topic,
+  sourcesOnly,
+}: {
+  search: string;
+  language: string | null;
+  topic: string | null;
+  sourcesOnly: boolean;
+}): string {
+  const query = search.trim();
+  const scope = [language && `in ${language}`, topic && `tagged ${topic}`].filter(Boolean).join(' ');
+  const forks = sourcesOnly ? ' once forks are hidden' : '';
+  if (query) return `No repositories match “${query}”${scope ? ` ${scope}` : ''}${forks}.`;
+  if (scope) return `No repositories ${scope}${forks}.`;
+  return `No repositories left${forks}.`;
+}
+
 /** Repos exist, the current filters just do not match any of them. */
-export function NoMatchesState({ onClear }: { onClear: () => void }) {
+export function NoMatchesState(props: {
+  search: string;
+  language: string | null;
+  topic: string | null;
+  sourcesOnly: boolean;
+  onClear: () => void;
+}) {
   return (
-    <div className="sheet bp-corners deck-rise flex flex-col items-center px-6 py-14 text-center">
-      <SearchIcon className="size-8 text-ink-3" />
-      <h3 className="mt-4 font-display text-lg font-semibold">Nothing matches those filters</h3>
-      <p className="mt-2 max-w-sm text-sm text-ink-2">
-        Every repository was filtered out. Widen the search or clear the filters to see them again.
-      </p>
-      <button
-        type="button"
-        onClick={onClear}
-        className="mt-5 cursor-pointer rounded-[2px] border border-line px-3 py-1.5 font-mono text-sm text-ink-2 transition-colors hover:border-accent hover:text-accent"
-      >
+    <div className="empty-panel is-dashed enter">
+      <p className="text-[15px] text-fg">{noMatchMessage(props)}</p>
+      <button type="button" onClick={props.onClear} className="chip mt-4">
         Clear filters
       </button>
     </div>
@@ -171,7 +158,7 @@ function describe(error: GitHubError, username: string): ErrorCopy {
       return {
         headline: 'GitHub rate limit reached',
         body: `This app calls the GitHub API without a token, which allows 60 requests an hour per IP address. The quota refills ${
-          error.resetAt ? timeUntil(error.resetAt) : 'within the hour'
+          error.resetAt ? `${timeUntil(error.resetAt)}, at ${clock.format(error.resetAt)}` : 'within the hour'
         }.`,
         retryable: true,
       };
@@ -202,20 +189,12 @@ export function ErrorState({
   const copy = describe(error, username);
 
   return (
-    <div
-      role="alert"
-      className="sheet bp-corners deck-rise flex flex-col items-center px-6 py-14 text-center"
-      style={{ borderColor: 'color-mix(in oklab, var(--critical) 35%, transparent)' }}
-    >
-      <AlertIcon className="size-9 text-critical" />
+    <div role="alert" className="empty-panel is-error enter">
+      <AlertIcon className="size-8 text-critical" />
       <h3 className="mt-4 font-display text-lg font-semibold">{copy.headline}</h3>
-      <p className="mt-2 max-w-md text-sm leading-relaxed text-ink-2">{copy.body}</p>
+      <p className="mt-2 max-w-md text-sm leading-relaxed text-muted">{copy.body}</p>
       {copy.retryable && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-5 cursor-pointer rounded-[2px] bg-accent px-4 py-1.5 font-display text-sm font-semibold uppercase tracking-wider text-accent-ink transition-opacity hover:opacity-90"
-        >
+        <button type="button" onClick={onRetry} className="btn-primary mt-5">
           Try again
         </button>
       )}

@@ -12,25 +12,6 @@ export function StarIcon({ className = '' }: IconProps) {
   );
 }
 
-export function ForkIcon({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    >
-      <circle cx="4" cy="3.2" r="1.8" />
-      <circle cx="12" cy="3.2" r="1.8" />
-      <circle cx="8" cy="12.8" r="1.8" />
-      <path d="M4 5v1.4A2.6 2.6 0 006.6 9h2.8A2.6 2.6 0 0012 6.4V5M8 9v2" />
-    </svg>
-  );
-}
-
 export function SearchIcon({ className = '' }: IconProps) {
   return (
     <svg
@@ -65,31 +46,6 @@ export function ArrowOutIcon({ className = '' }: IconProps) {
   );
 }
 
-export function SunIcon({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    >
-      <circle cx="8" cy="8" r="3.1" />
-      <path d="M8 1.4v1.5M8 13.1v1.5M14.6 8h-1.5M2.9 8H1.4M12.7 3.3l-1 1M4.3 11.7l-1 1M12.7 12.7l-1-1M4.3 4.3l-1-1" />
-    </svg>
-  );
-}
-
-export function MoonIcon({ className = '' }: IconProps) {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className={`${base} ${className}`} fill="currentColor">
-      <path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.8 5.8 0 106.8 6.8z" />
-    </svg>
-  );
-}
-
 export function AlertIcon({ className = '' }: IconProps) {
   return (
     <svg
@@ -103,23 +59,6 @@ export function AlertIcon({ className = '' }: IconProps) {
     >
       <circle cx="12" cy="12" r="9" />
       <path d="M12 7.6v5M12 16.2h.01" />
-    </svg>
-  );
-}
-
-export function DeckMark({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 32 32"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2.2"
-      strokeLinejoin="round"
-    >
-      <path d="M16 4l10 6v12l-10 6-10-6V10z" />
-      <path d="M16 11l5 3v6l-5 3-5-3v-6z" opacity="0.55" />
     </svg>
   );
 }
@@ -138,6 +77,89 @@ export function PinIcon({ className = '' }: IconProps) {
     >
       <path d="M8 1.8l2.2 2.2v3.1l1.9 1.9H3.9l1.9-1.9V4z" />
       <path d="M8 9v5.2" />
+    </svg>
+  );
+}
+
+function Stroke({ className = '', children }: IconProps & { children: React.ReactNode }) {
+  return (
+    <svg
+      viewBox="0 0 16 16"
+      aria-hidden="true"
+      className={`${base} ${className}`}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {children}
+    </svg>
+  );
+}
+
+/** A closed book: GitHub's shorthand for a repository. */
+export function BookIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M3 2.5h8.5v11H3.8a.8.8 0 01-.8-.8z" />
+      <path d="M3 11.2c0-.6.4-1 1-1h7.5" />
+    </Stroke>
+  );
+}
+
+export function SortIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5 3v10M2.6 10.6L5 13l2.4-2.4M11 13V3M8.6 5.4L11 3l2.4 2.4" />
+    </Stroke>
+  );
+}
+
+export function FilterIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M2.5 3.5h11l-4 5v4l-3 1.5V8.5z" />
+    </Stroke>
+  );
+}
+
+export function CodeIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5.5 4.5L2 8l3.5 3.5M10.5 4.5L14 8l-3.5 3.5M9 3L7 13" />
+    </Stroke>
+  );
+}
+
+export function ChevronLeftIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M10 3L5 8l5 5" />
+    </Stroke>
+  );
+}
+
+export function ChevronRightIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M6 3l5 5-5 5" />
+    </Stroke>
+  );
+}
+
+export function PauseIcon({ className = '' }: IconProps) {
+  return (
+    <Stroke className={className}>
+      <path d="M5.5 3.5v9M10.5 3.5v9" />
+    </Stroke>
+  );
+}
+
+export function PlayIcon({ className = '' }: IconProps) {
+  return (
+    <svg viewBox="0 0 16 16" aria-hidden="true" className={`${base} ${className}`} fill="currentColor">
+      <path d="M5 3.2v9.6L12.5 8z" />
     </svg>
   );
 }
