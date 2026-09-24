@@ -2,66 +2,27 @@ import type { GitHubError } from '../lib/github';
 import { timeUntil } from '../lib/format';
 import { AlertIcon, DeckMark, SearchIcon } from './icons';
 
-const SUGGESTIONS = ['torvalds', 'sindresorhus', 'gaearon', 'simonw', 'anthropics'];
-
-function HandleRow({
-  title,
-  handles,
-  onPick,
-}: {
-  title: string;
-  handles: string[];
-  onPick: (username: string) => void;
-}) {
-  if (handles.length === 0) return null;
+/**
+ * Before any search. The hero above holds the field and the suggestions; this
+ * only says where the results will appear, and gets the viewer back up there.
+ */
+export function ReposIdle({ onStart }: { onStart: () => void }) {
   return (
-    <div className="mt-6 flex flex-wrap items-center justify-center gap-2">
-      <span className="label">{title}</span>
-      {handles.map((name) => (
-        <button
-          key={name}
-          type="button"
-          onClick={() => onPick(name)}
-          className="cursor-pointer rounded-[2px] border border-line px-3 py-1 font-mono text-xs text-ink-2 transition-colors hover:border-accent hover:text-accent"
-        >
-          {name}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** First run: explain the app in one line and make it trivially easy to try. */
-export function IdleState({
-  onPick,
-  pinned,
-  recent,
-}: {
-  onPick: (username: string) => void;
-  pinned: string[];
-  recent: string[];
-}) {
-  // Anything already pinned would be a duplicate in the recents row.
-  const recentOnly = recent.filter(
-    (name) => !pinned.some((p) => p.toLowerCase() === name.toLowerCase()),
-  );
-
-  return (
-    <div className="deck-rise flex flex-col items-center px-4 py-16 text-center sm:py-24">
-      <DeckMark className="size-12 text-accent" />
-      <h2 className="mt-5 max-w-xl font-display text-2xl font-semibold tracking-tight sm:text-3xl">
-        Draw anyone&rsquo;s GitHub
-      </h2>
-      <p className="mt-3 max-w-md text-sm leading-relaxed text-ink-2">
-        Enter a username to see their public repositories — sorted, filtered, and weighed by the
-        languages they actually build in.
+    <div className="deck-rise flex flex-col items-center rounded-card border border-dashed border-panel-line px-6 py-14 text-center">
+      <p className="label">
+        Nothing opened yet<em>Repositories appear here</em>
       </p>
-
-      <HandleRow title="Pinned" handles={pinned} onPick={onPick} />
-      <HandleRow title="Recent" handles={recentOnly.slice(0, 6)} onPick={onPick} />
-      {pinned.length === 0 && recentOnly.length === 0 && (
-        <HandleRow title="Try" handles={SUGGESTIONS} onPick={onPick} />
-      )}
+      <p className="mt-3 max-w-sm text-sm text-muted">
+        Search a GitHub username above to open its box: every public repository, sortable and
+        filterable.
+      </p>
+      <button
+        type="button"
+        onClick={onStart}
+        className="mt-5 min-h-10 cursor-pointer rounded-full border border-panel-line px-4 text-sm font-semibold text-fg transition-colors hover:border-panel-hover"
+      >
+        Search a username
+      </button>
     </div>
   );
 }

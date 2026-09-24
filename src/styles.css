@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@import "./obsidian.css";
 
 /* ---------------------------------------------------------------------------
    OBSIDIAN
@@ -183,12 +184,13 @@ body {
   }
 }
 
-/* A label: small, uppercase, mono. An <em> inside is its muted second line. */
+/* A label: small, uppercase, mono. An <em> inside is its muted second line.
+   No colour of its own — labels inherit --fg from the body, which leaves a
+   parent or a text-* utility free to mute one without a specificity fight. */
 @utility label {
   font: 500 11px/1.45 var(--ff-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--fg);
 }
 
 .label em {

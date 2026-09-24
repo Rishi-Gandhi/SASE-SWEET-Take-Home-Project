@@ -39,7 +39,7 @@ function stubGitHub(
 async function search(name: string) {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText(/github username/i), name);
-  await user.click(screen.getByRole('button', { name: /^draw$/i }));
+  await user.click(screen.getByRole('button', { name: /^open box$/i }));
   return user;
 }
 

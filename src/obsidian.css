@@ -1,0 +1,260 @@
+/* ============================================================================
+   OBSIDIAN — the designed parts: page shell, top bar, hero, 3D cubes, orbit
+   rings, the scroll-built stack, and the carousel. Tokens come from
+   styles.css; exact values are ported from
+   design-reference/repobox-obsidian-reference.html.
+
+   Everything here sits in the `components` layer so a Tailwind utility on the
+   same element still wins. Motion animates transform and opacity only.
+============================================================================ */
+
+@layer components {
+  /* ---------- page shell ---------- */
+
+  /* clip, not hidden: it stops the full-bleed carousel causing a sideways
+     page scroll without creating a scroll container, so sticky still works. */
+  .app {
+    min-height: 100dvh;
+    overflow-x: clip;
+  }
+
+  .wrap {
+    max-width: 1200px;
+    margin-inline: auto;
+    padding-inline: 24px;
+  }
+
+  /* ---------- top bar ---------- */
+
+  .topbar {
+    position: sticky;
+    top: env(safe-area-inset-top, 0px);
+    z-index: 30;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 28px;
+    align-items: center;
+    height: 48px;
+    padding-inline: 24px;
+    background: color-mix(in srgb, var(--bg) 86%, transparent);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--faint);
+  }
+
+  .topbar-brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-decoration: none;
+  }
+
+  /* A square turned 45° with the accent inside: the brand mark. */
+  .brand-glyph {
+    position: relative;
+    width: 14px;
+    height: 14px;
+    border: 1.5px solid var(--fg);
+    transform: rotate(45deg) scale(0.8);
+  }
+
+  .brand-glyph::after {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--accent);
+  }
+
+  .topbar-mid {
+    min-width: 0;
+  }
+
+  .topbar-end {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 14px;
+  }
+
+  .topbar-crumb {
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .topbar-crumb b {
+    color: var(--fg);
+    font-weight: 500;
+  }
+
+  .kbd-btn {
+    display: inline-flex;
+    align-items: center;
+    height: 26px;
+    padding-inline: 8px;
+    border: 1px solid var(--panel-line);
+    border-radius: 999px;
+    background: transparent;
+    color: var(--muted);
+    font: 500 11px/1 var(--ff-mono);
+    cursor: pointer;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .kbd-btn:hover {
+    color: var(--fg);
+    border-color: var(--panel-hover);
+  }
+
+  @media (max-width: 640px) {
+    .topbar {
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+    }
+
+    .topbar-mid {
+      display: none;
+    }
+
+    /* Once condensed, the account's identity is worth more than the crumb. */
+    .topbar.is-condensed {
+      grid-template-columns: auto 1fr auto;
+    }
+
+    .topbar.is-condensed .topbar-mid {
+      display: block;
+    }
+
+    .topbar.is-condensed .topbar-crumb {
+      display: none;
+    }
+  }
+
+  /* ---------- hero ---------- */
+
+  .hero {
+    position: relative;
+    min-height: 720px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 34px 24px 110px;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  /* ---------- search ---------- */
+
+  .search {
+    position: relative;
+    z-index: 4;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+    width: min(520px, 100%);
+  }
+
+  .search-row {
+    display: flex;
+    align-items: stretch;
+    gap: 6px;
+    width: 100%;
+    padding: 5px;
+    border: 1px solid var(--input-line);
+    border-radius: 999px;
+    background: var(--input-bg);
+  }
+
+  .search-row:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .search-at {
+    display: grid;
+    place-items: center;
+    padding-left: 12px;
+    font: 500 15px/1 var(--ff-mono);
+    color: var(--muted);
+  }
+
+  .search-input {
+    flex: 1;
+    min-width: 0;
+    padding: 10px 4px;
+    border: 0;
+    background: transparent;
+    color: var(--fg);
+    font: 500 16px/1 var(--ff-body);
+  }
+
+  /* The row draws the focus ring, so the field itself does not. */
+  .search-input:focus-visible {
+    outline: none;
+  }
+
+  .search-input::placeholder {
+    color: var(--muted);
+  }
+
+  .btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 42px;
+    padding-inline: 18px;
+    border: 1px solid transparent;
+    border-radius: 999px;
+    background: var(--accent);
+    color: var(--on-accent);
+    font: 600 14px/1 var(--ff-body);
+    white-space: nowrap;
+    cursor: pointer;
+    transition: transform 0.15s, filter 0.15s;
+  }
+
+  .btn-primary:hover {
+    filter: brightness(1.1);
+  }
+
+  .btn-primary:active {
+    transform: translateY(1px);
+  }
+
+  .hint {
+    min-height: 20px;
+    margin: 0;
+    font-size: 13px;
+    color: var(--muted);
+    text-align: center;
+    text-wrap: balance;
+  }
+
+  .hint button,
+  .hint a {
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--fg);
+    font: inherit;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .hint-group {
+    white-space: normal;
+  }
+
+  /* ---------- repositories ---------- */
+
+  .repos {
+    position: relative;
+    padding-block: 64px 96px;
+    border-top: 1px solid var(--faint);
+    background: var(--bg2);
+    /* Clears the sticky top bar when scrolled to. */
+    scroll-margin-top: 48px;
+  }
+}

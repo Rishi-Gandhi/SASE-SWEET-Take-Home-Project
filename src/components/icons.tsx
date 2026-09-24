@@ -65,31 +65,6 @@ export function ArrowOutIcon({ className = '' }: IconProps) {
   );
 }
 
-export function SunIcon({ className = '' }: IconProps) {
-  return (
-    <svg
-      viewBox="0 0 16 16"
-      aria-hidden="true"
-      className={`${base} ${className}`}
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.6"
-      strokeLinecap="round"
-    >
-      <circle cx="8" cy="8" r="3.1" />
-      <path d="M8 1.4v1.5M8 13.1v1.5M14.6 8h-1.5M2.9 8H1.4M12.7 3.3l-1 1M4.3 11.7l-1 1M12.7 12.7l-1-1M4.3 4.3l-1-1" />
-    </svg>
-  );
-}
-
-export function MoonIcon({ className = '' }: IconProps) {
-  return (
-    <svg viewBox="0 0 16 16" aria-hidden="true" className={`${base} ${className}`} fill="currentColor">
-      <path d="M13.2 9.6A5.6 5.6 0 016.4 2.8a5.8 5.8 0 106.8 6.8z" />
-    </svg>
-  );
-}
-
 export function AlertIcon({ className = '' }: IconProps) {
   return (
     <svg

@@ -24,7 +24,6 @@ interface Props {
   comparing: boolean;
   sort: SortKey;
   sourcesOnly: boolean;
-  theme: 'light' | 'dark';
   hasFilters: boolean;
   onPickUser: (login: string) => void;
   onCompare: (login: string) => void;
@@ -32,7 +31,6 @@ interface Props {
   onTogglePin: (login: string) => void;
   onSort: (sort: SortKey) => void;
   onToggleForks: () => void;
-  onToggleTheme: () => void;
   onClearFilters: () => void;
 }
 
@@ -152,13 +150,6 @@ export function CommandPalette(props: Props) {
         label: props.sourcesOnly ? 'Show forks' : 'Hide forks',
         hint: 'Filter',
         run: props.onToggleForks,
-      },
-      {
-        id: 'toggle-theme',
-        group: 'Commands',
-        label: `Switch to ${props.theme === 'dark' ? 'light' : 'dark'} theme`,
-        hint: 'Appearance',
-        run: props.onToggleTheme,
       },
     ];
 
